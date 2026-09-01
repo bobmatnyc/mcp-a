@@ -9,7 +9,7 @@ required proposal sections.
 | MAEP | Title | State | Target |
 |---|---|---|---|
 | [0001](./0001-structured-responses-and-introspection.md) | Domain introspection and structured responses | Accepted historical design | 1.0 beta |
-| [0002](./0002-session-management.md) | Session management | Draft; not adopted | 1.x |
+| [0002](./0002-session-management.md) | Session management | Historical draft; superseded in 2.0 by 0006 | 1.x |
 | [0003](./0003-action-primitive.md) | Action primitive | Historical draft; superseded in 2.0 by 0006 | 1.x |
 | [0004](./0004-hierarchical-schema.md) | Hierarchical and operation-aware schema | Historical draft; superseded in 2.0 by 0006 | 1.x |
 | [0005](./0005-compiled-query-assistance.md) | Compiled query assistance | Implemented in 1.1; semantics revised by 0006 | 1.1 beta |

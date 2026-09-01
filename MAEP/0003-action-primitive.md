@@ -2,10 +2,15 @@
 MAEP: 0003
 Title: The `action` primitive — write-side counterpart to `query`
 Author: Bob Matsuoka <robert@matsuoka.com>
-Status: Draft
+Status: Superseded
 Created: 2026-06-22
 Spec-Version-Target: 1.0
 ---
+
+> Superseded by [MAEP-0006](./0006-mcp-binding-and-protocol-hardening.md) on
+> 2026-09-01. MAEP-0006 replaces this single-status action model with a
+> seven-state lifecycle split across `operation_id`/`execution_id` and
+> resolve-before-execute semantics — an incompatible design for the 2.0 line.
 
 ## Summary
 
