@@ -1,0 +1,23 @@
+{
+  "domain_id": "sales-analytics",
+  "schema_version": "2.3.0",
+  "schema_id": "https://schemas.example.com/mcpa/sales-analytics/2.3.0",
+  "target": "domain",
+  "truncated": false,
+  "next_paths": [],
+  "ontology": {
+    "entities": [
+      {
+        "semantic_id": "sales.Account",
+        "name": "Account",
+        "fields": [
+          { "semantic_id": "sales.Account.id", "name": "account_id", "data_type": "reference", "nullable": false, "role": "identifier" },
+          { "semantic_id": "sales.Account.region", "name": "region", "data_type": "enum", "nullable": false, "role": "dimension", "enum_values": ["AMER", "EMEA", "APAC"] },
+          { "semantic_id": "sales.Account.arr", "name": "arr", "data_type": "decimal", "unit": "currency", "currency": "USD", "precision": 18, "scale": 2, "nullable": false, "role": "measure", "allowed_aggregations": ["sum", "avg", "min", "max"] }
+        ],
+        "relationships": []
+      }
+    ]
+  },
+  "as_of": "2026-09-01T13:00:00Z"
+}

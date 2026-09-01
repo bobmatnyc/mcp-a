@@ -4,12 +4,14 @@ Version: 1.1.0-beta
 Date: 2026-07-01
 ---
 
+> Archived 1.1 design. It is not current 2.0 implementation guidance.
+
 # Building GraphQL Queries from the `schema` Ontology
 
 > **Status: non-normative guide.** This document is explanatory implementation
-> guidance complementing [`../SPEC.md`](../SPEC.md). It is not part of the
+> guidance complementing [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md). It is not part of the
 > behavior contract; where it differs from the SPEC or
-> [`../schemas/`](../schemas/), those win. The Python snippet below is
+> [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/), those win. The Python snippet below is
 > **illustrative** — a readable reference to copy and adapt, **not** a
 > maintained module shipped with this repo.
 
@@ -18,7 +20,7 @@ them from a GraphQL backend, the server builds a GraphQL document **dynamically*
 from two inputs:
 
 1. The domain's **ontology** — exactly what the `schema` primitive returns
-   ([`../schemas/schema.response.json`](../schemas/schema.response.json)):
+   ([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json)):
    entities, fields (with `type`, `unit`, `nullable`, `allowed_aggregations`,
    `enum_values`), and relationships (with `cardinality`).
 2. A **parsed intent** — the structured query plan produced by the server-side
@@ -35,7 +37,7 @@ fail with `AGGREGATION_NOT_ALLOWED` rather than be guessed.
 ## Mapping tables: ontology → GraphQL
 
 The ontology vocabulary (defined in
-[`../schemas/schema.response.json`](../schemas/schema.response.json)) maps to
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json)) maps to
 GraphQL as follows. These are *conventions*; your GraphQL schema's actual
 naming is up to you, but a consistent mapping keeps the builder simple.
 
@@ -88,8 +90,8 @@ entry. For every **value aggregation** (`sum`/`avg`/`min`/`max`, and `count` on
 a dimension/enum field), only emit the aggregate selection if that aggregation
 is in the field's `allowed_aggregations`. Anything else is a builder error that
 must surface as `AGGREGATION_NOT_ALLOWED`
-([`../SPEC.md`](../SPEC.md#error-model)), exactly as
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json)
+([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model)), exactly as
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json)
 does for the sales domain.
 
 ## The dynamic algorithm
@@ -244,9 +246,9 @@ def build_graphql(ontology: dict, intent: dict) -> str:
 ## Worked example: storefront revenue by region
 
 Take the ontology from
-[`../examples/15-schema-graphql.response.json`](../examples/15-schema-graphql.response.json)
+[`../../examples/v1.1/15-schema-graphql.response.json`](../../examples/v1.1/15-schema-graphql.response.json)
 and the intent parsed from the structured `query` in
-[`../examples/16-query-graphql-structured.request.json`](../examples/16-query-graphql-structured.request.json)
+[`../../examples/v1.1/16-query-graphql-structured.request.json`](../../examples/v1.1/16-query-graphql-structured.request.json)
 (*"Total revenue and order count by region for paid and shipped orders this
 quarter"*):
 
@@ -274,7 +276,7 @@ query { orders(filter: { status: [PAID, SHIPPED] }) { aggregate { groupBy: [regi
 The GraphQL resolver computes the `sum` and `count` per region — deterministic,
 server-side. The server maps each returned group back to a typed object in the
 `query` response's `structured` array, exactly as in
-[`../examples/16-query-graphql-structured.response.json`](../examples/16-query-graphql-structured.response.json):
+[`../../examples/v1.1/16-query-graphql-structured.response.json`](../../examples/v1.1/16-query-graphql-structured.response.json):
 
 ```json
 "structured": [
@@ -288,21 +290,21 @@ and records the generated query as a citation snippet under
 **Now the failure case.** If the intent had asked for `("region", "sum")` —
 summing an enum — step 5 finds `sum ∉ Order.region.allowed_aggregations`
 (which is `["count"]`) and raises `AggregationNotAllowed`. The server returns
-`AGGREGATION_NOT_ALLOWED` per [`../SPEC.md`](../SPEC.md#error-model), mirroring
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json).
+`AGGREGATION_NOT_ALLOWED` per [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model), mirroring
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json).
 It does not invent a number.
 
 ## The precision pillar
 
 Aggregations in MCP-A are **computed, not estimated**.
-[`../SPEC.md`](../SPEC.md#aggregation-correctness-conformance) (Aggregation
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#aggregation-correctness-conformance) (Aggregation
 Correctness Conformance) requires:
 
 > All advertised aggregations MUST be computed deterministically server-side via
 > database queries, GraphQL resolvers, or direct computation over source data
 > (not via learned model inference).
 
-[`../CONFORMANCE.md`](../CONFORMANCE.md) carries the matching audit check. A
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md) carries the matching audit check. A
 GraphQL backend satisfies this naturally: the `aggregate` resolver does the math.
 The builder's only job is to ensure it asks for *only* the aggregations the
 ontology promised — which is why step 5 is the heart of this guide.
@@ -311,4 +313,4 @@ ontology promised — which is why step 5 is the heart of this guide.
 
 - [`surfacing-apis.md`](./surfacing-apis.md) — where this builder fits in the end-to-end flow (step 3.2).
 - [`intent-and-query-building.md`](./intent-and-query-building.md) — how the `intent` dict is produced.
-- [`../schemas/schema.response.json`](../schemas/schema.response.json) — the ontology contract this consumes.
+- [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json) — the ontology contract this consumes.

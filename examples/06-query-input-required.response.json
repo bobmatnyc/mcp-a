@@ -1,0 +1,18 @@
+{
+  "status": "input_required",
+  "query_id": "qry_01K47Q1C1M4GBR9QKQW28EFN6S",
+  "input_request": {
+    "request_id": "input_01K47Q1G4MAA8S9D7Y5K2N1X2V",
+    "message": "Three authorized accounts are named Acme. Choose one account.",
+    "fields": [
+      {
+        "name": "account_id",
+        "title": "Account",
+        "required": true,
+        "sensitive": false,
+        "schema": { "type": "string", "enum": ["acct_100", "acct_200", "acct_300"] }
+      }
+    ],
+    "expires_at": "2026-09-01T14:00:00Z"
+  }
+}

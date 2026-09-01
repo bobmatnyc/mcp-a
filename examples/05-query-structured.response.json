@@ -1,0 +1,45 @@
+{
+  "status": "completed",
+  "answer_id": "ans_01K47P8K6YJ7KX8C2A5QK91R2Z",
+  "revision": 1,
+  "answer": "AMER has $18.25M in ARR and EMEA has $9.93M in the authorized scope.",
+  "structured": [
+    { "region": "AMER", "total_arr": 18250000.00 },
+    { "region": "EMEA", "total_arr": 9930000.00 }
+  ],
+  "output_schema_id": "https://schemas.example.com/results/sha256-4b7f",
+  "output_schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "region": { "type": "string", "enum": ["AMER", "EMEA", "APAC"] },
+        "total_arr": { "type": "number" }
+      },
+      "required": ["region", "total_arr"],
+      "additionalProperties": false
+    }
+  },
+  "executed_query_plan": {
+    "schema_versions": { "sales-analytics": "2.3.0" },
+    "domains": ["sales-analytics"],
+    "group_by": ["sales.Account.region"],
+    "aggregations": [{ "measure": "sales.Account.arr", "function": "sum", "as": "total_arr" }],
+    "consistency": "snapshot"
+  },
+  "claims": [
+    { "claim_id": "claim_arr", "text": "AMER has $18.25M in ARR and EMEA has $9.93M.", "structured_paths": ["/0/total_arr", "/1/total_arr"] }
+  ],
+  "citations": [
+    { "citation_id": "cit_sales_rollup", "claim_ids": ["claim_arr"], "source_system": "warehouse", "domain_id": "sales-analytics", "retrieved_at": "2026-09-01T13:00:05Z", "as_of": "2026-09-01T12:45:00Z", "snippet": "Authorized snapshot aggregation by region." }
+  ],
+  "conflicts": [],
+  "completeness": "complete",
+  "computed_scope": { "summary": "Authorized account and regional scope", "scope_hash": "sha256:ad19d43bfa712345" },
+  "source_statuses": [
+    { "source_system": "warehouse", "domain_id": "sales-analytics", "status": "success", "required": true, "as_of": "2026-09-01T12:45:00Z", "retrieved_at": "2026-09-01T13:00:05Z", "latency_ms": 410 }
+  ],
+  "routing": { "reuse": "new", "domains": ["sales-analytics"], "plan_digest": "sha256:9d7c", "safe_rationale": "The supplied typed plan targeted the authorized sales domain." },
+  "created_at": "2026-09-01T13:00:06Z",
+  "as_of": "2026-09-01T12:45:00Z"
+}

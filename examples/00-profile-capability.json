@@ -1,0 +1,7 @@
+{
+  "versions": ["2.0.0-beta"],
+  "selectedVersion": "2.0.0-beta",
+  "mcpBaseline": "2025-11-25",
+  "conformance": "Full",
+  "features": ["discovery", "query.prose", "query.structured", "provenance.claims", "failure.partial", "schema.ontology", "schema.query-plan", "answer.follow-up", "context.preferences", "explain", "action.safe"]
+}

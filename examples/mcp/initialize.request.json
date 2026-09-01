@@ -1,0 +1,26 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": {
+      "experimental": {
+        "io.modelcontextprotocol/mcpa": {
+          "versions": ["2.0.0-beta"],
+          "mcpBaseline": "2025-11-25",
+          "features": [
+            "discovery",
+            "query.prose",
+            "query.structured",
+            "provenance.claims"
+          ]
+        }
+      }
+    },
+    "clientInfo": {
+      "name": "example-mcpa-client",
+      "version": "0.1.0"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "domain_id": "sales-analytics",
+  "schema_version": "2.3.0",
+  "schema_id": "https://schemas.example.com/mcpa/sales-analytics/2.3.0",
+  "target": "query",
+  "truncated": false,
+  "next_paths": [],
+  "query_capabilities": {
+    "query_plan_schema": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/QueryPlan" },
+    "max_limit": 10000,
+    "supported_consistency": ["best_effort", "snapshot"],
+    "supports_filtering": true,
+    "supports_grouping": true,
+    "supports_ordering": true
+  },
+  "as_of": "2026-09-01T13:00:00Z"
+}

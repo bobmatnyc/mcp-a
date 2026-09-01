@@ -1,37 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/error.json",
-  "title": "MCP-A Error",
-  "description": "Abstract, transport-independent error object as defined in SPEC §Error Model. Implementers MUST map the abstract `code` to the transport's native error encoding (see Canonical Transport Mappings). Clients SHOULD inspect the abstract `code` name rather than transport-specific numeric codes.",
+  "$id": "https://mcp-a.dev/schemas/2.0/error.json",
+  "title": "MCP-A 2.0 Tool Execution Error",
   "type": "object",
   "properties": {
     "code": {
       "type": "string",
-      "description": "Named abstract error code from SPEC §Error Model. Exactly the canonical set.",
-      "enum": [
-        "UNAUTHENTICATED",
-        "FORBIDDEN",
-        "INVALID_REQUEST",
-        "DOMAIN_NOT_FOUND",
-        "ANSWER_NOT_FOUND",
-        "SCHEMA_NONCONFORMANT",
-        "AGGREGATION_NOT_ALLOWED",
-        "TIMEOUT",
-        "SOURCE_UNAVAILABLE",
-        "ACTION_NOT_FOUND",
-        "ACTION_FAILED"
-      ]
+      "enum": ["UNAUTHENTICATED", "FORBIDDEN", "INVALID_REQUEST", "DOMAIN_NOT_FOUND", "ANSWER_NOT_FOUND", "EXECUTION_NOT_FOUND", "OPERATION_NOT_FOUND", "SCHEMA_NONCONFORMANT", "AGGREGATION_NOT_ALLOWED", "TIMEOUT", "SOURCE_UNAVAILABLE", "CONFLICT", "PRECONDITION_FAILED", "RATE_LIMITED", "IDEMPOTENCY_CONFLICT", "ACTION_FAILED", "CANCELLED", "INTERNAL"]
     },
-    "message": {
-      "type": "string",
-      "description": "Human-readable description of the error."
-    },
-    "detail": {
-      "type": "object",
-      "description": "Optional implementation-defined context (e.g., which domain triggered FORBIDDEN, or which source triggered SOURCE_UNAVAILABLE).",
-      "additionalProperties": true
-    }
+    "message": { "type": "string", "minLength": 1 },
+    "retryable": { "type": "boolean" },
+    "retry_after_ms": { "type": "integer", "minimum": 1 },
+    "correlation_id": { "type": "string" },
+    "detail": { "type": "object", "additionalProperties": true },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["code"],
+  "required": ["code", "message", "retryable"],
+  "dependentSchemas": {
+    "retry_after_ms": { "properties": { "retryable": { "const": true } } }
+  },
   "additionalProperties": false
 }

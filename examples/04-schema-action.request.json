@@ -1,0 +1,5 @@
+{
+  "domain_id": "sales-analytics",
+  "target": "action",
+  "operation_id": "sales.create_follow_up"
+}

@@ -29,7 +29,7 @@ Describe the change to the protocol:
 
 - New fields, types, or primitives and their exact shape (JSON Schema or prose).
 - New MUST/SHOULD/MAY rules for servers and clients.
-- Error codes and conditions (e.g., when a server MUST return 422).
+- Error codes, MCP error category, and triggering conditions.
 - Interactions with existing primitives, if any.
 
 ## Rationale and Alternatives
@@ -47,11 +47,31 @@ Is this a breaking change?  State it plainly.
 - If breaking: state which semver component bumps and what migration path exists
   for existing implementations.
 
-## Reference Implementation
+## MCP Interaction
 
-Link to or describe the reference implementation, if one exists.  If not yet
-started, note the planned language/framework and any known gotchas for
-implementers.
+Describe capability negotiation, tool/resource/Task/Elicitation behavior,
+annotations, structured content, protocol errors, and the MCP baseline affected.
+
+## Security and Privacy
+
+Identify trust-boundary changes, abuse cases, authorization checks, sensitive
+data, retention/deletion behavior, resource limits, and required threat-model
+updates. “No impact” requires a rationale.
+
+## Failure and Recovery
+
+Define partial success, retryability, idempotency, cancellation, stale handles,
+upstream failure, and what a client can do next.
+
+## Conformance and Test Vectors
+
+List positive examples, negative schema cases, MCP envelope vectors, runtime
+tests, and cross-version or cross-language interoperability evidence required.
+
+## Implementation Evidence
+
+Link to independent implementations or state explicitly that none exist. Do not
+use schema examples as evidence of runtime implementability.
 
 ## Open Questions
 
@@ -61,5 +81,5 @@ questions belong here, not buried in the Specification section.
 ## References
 
 - [SPEC.md](../SPEC.md) -- full primitive definitions
-- [Related MAEP](./NNNN-related.md) -- if applicable
+- Related MAEP: `./NNNN-related.md` -- replace with a real link if applicable
 - [GitHub issue](https://github.com/org/mcp-a-spec/issues/N) -- discussion thread

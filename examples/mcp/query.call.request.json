@@ -1,0 +1,14 @@
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "mcpa.query",
+    "arguments": {
+      "question": "What is ARR by region?",
+      "response_target": {
+        "kind": "derive"
+      }
+    }
+  }
+}

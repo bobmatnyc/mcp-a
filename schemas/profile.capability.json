@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcp-a.dev/schemas/2.0/profile.capability.json",
+  "title": "MCP-A Initialization Capability",
+  "type": "object",
+  "properties": {
+    "versions": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$" }, "minItems": 1, "uniqueItems": true },
+    "selectedVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$" },
+    "mcpBaseline": { "const": "2025-11-25" },
+    "conformance": { "type": "string", "enum": ["Core", "Full", "Extended"] },
+    "features": { "type": "array", "items": { "type": "string", "pattern": "^[a-z][a-z0-9.-]+$" }, "minItems": 1, "uniqueItems": true },
+    "schemaBaseUri": { "type": "string", "format": "uri" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
+  },
+  "required": ["versions", "selectedVersion", "mcpBaseline", "conformance", "features"],
+  "additionalProperties": false
+}

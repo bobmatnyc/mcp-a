@@ -1,56 +1,36 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/context.response.json",
-  "title": "MCP-A context Response",
-  "description": "Response for the context primitive (SPEC §5): the authenticated user's identity, preferences, access scope, and (optional) memory.",
+  "$id": "https://mcp-a.dev/schemas/2.0/context.response.json",
+  "title": "mcpa.context Response",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string",
-      "description": "The authenticated user this context belongs to. MUST NOT leak another user's context."
-    },
-    "preferences": {
-      "type": "object",
-      "description": "User preferences for output formatting, language, etc.",
-      "properties": {
-        "timezone": { "type": "string", "description": "User timezone." },
-        "output_format": { "type": "string", "description": "Preferred output format." },
-        "language": { "type": "string", "description": "Preferred language (locale)." }
-      },
-      "additionalProperties": true
-    },
-    "access_scope": {
-      "description": "The user's current access scope. Re-evaluated on every read; the source of truth for RBAC.",
-      "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/AccessScope"
-    },
-    "memory": {
-      "type": "object",
-      "description": "Optional multi-turn memory (RECOMMENDED).",
-      "properties": {
-        "recent_domains": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Domains queried recently."
+    "mode": { "type": "string", "enum": ["read", "set", "append", "clear"] },
+    "namespaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string" },
+          "version": { "type": "integer", "minimum": 0 },
+          "values": { "type": "object", "additionalProperties": true },
+          "max_bytes": { "type": "integer", "minimum": 0 },
+          "used_bytes": { "type": "integer", "minimum": 0 },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
         },
-        "recent_answers": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Recent answer_id values."
-        },
-        "preferences_last_updated": {
-          "type": "string",
-          "format": "date-time",
-          "description": "RFC3339 timestamp of the last preferences update."
-        }
-      },
-      "additionalProperties": true
+        "required": ["namespace", "version", "values", "max_bytes", "used_bytes", "updated_at"],
+        "additionalProperties": false
+      }
     },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "RFC3339 timestamp."
-    }
+    "updated_namespace": { "type": "string" },
+    "version": { "type": "integer", "minimum": 0 },
+    "as_of": { "type": "string", "format": "date-time" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["user_id"],
+  "required": ["mode", "as_of"],
+  "oneOf": [
+    { "properties": { "mode": { "const": "read" } }, "required": ["namespaces"], "not": { "anyOf": [{ "required": ["updated_namespace"] }, { "required": ["version"] }] } },
+    { "properties": { "mode": { "enum": ["set", "append", "clear"] } }, "required": ["updated_namespace", "version"], "not": { "required": ["namespaces"] } }
+  ],
   "additionalProperties": false
 }

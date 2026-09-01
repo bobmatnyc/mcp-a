@@ -1,0 +1,13 @@
+{
+  "query_plan": {
+    "schema_versions": { "sales-analytics": "2.3.0" },
+    "domains": ["sales-analytics"],
+    "group_by": ["sales.Account.region"],
+    "aggregations": [
+      { "measure": "sales.Account.arr", "function": "sum", "as": "total_arr" }
+    ],
+    "consistency": "snapshot"
+  },
+  "response_target": { "kind": "derive" },
+  "options": { "include_prose": true }
+}

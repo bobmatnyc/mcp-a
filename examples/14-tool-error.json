@@ -1,0 +1,11 @@
+{
+  "code": "PRECONDITION_FAILED",
+  "message": "The account changed after the action was prepared.",
+  "retryable": false,
+  "correlation_id": "corr_01K47V2C1KQ8M3T4A9NW6P5BHD",
+  "detail": {
+    "resource": "Account/acct_100",
+    "expected_version": "42",
+    "current_version": "43"
+  }
+}

@@ -1,5 +1,4 @@
 {
-  "user_id": "u-4471",
-  "semantic_filter": "sales pipeline accounts",
+  "filter": "revenue",
   "limit": 25
 }

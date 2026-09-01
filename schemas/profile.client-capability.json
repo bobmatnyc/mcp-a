@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcp-a.dev/schemas/2.0/profile.client-capability.json",
+  "title": "MCP-A Client Initialization Capability",
+  "type": "object",
+  "properties": {
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "mcpBaseline": { "const": "2025-11-25" },
+    "features": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9.-]+$" },
+      "uniqueItems": true
+    },
+    "extensions": {
+      "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions"
+    }
+  },
+  "required": ["versions", "mcpBaseline"],
+  "additionalProperties": false
+}

@@ -1,104 +1,95 @@
 ---
 Status: DRAFT
-Version: 1.1.0-beta
-Date: 2026-07-01
+Version: 2.0.0-beta
+Date: 2026-09-01
+MCP-Baseline: 2025-11-25
 ---
 
 # MCP-A — the MCP Answers Profile
 
-![version](https://img.shields.io/badge/version-v1.0.1--beta-blue) ![license](https://img.shields.io/badge/license-CC%20BY%204.0-lightgrey) ![spec](https://img.shields.io/badge/spec-MCP--A-green)
+MCP-A is an experimental, versioned profile for MCP servers that compile
+answers and actions across one or more domains. It defines seven namespaced MCP
+tools, a typed semantic/query layer, claim-linked provenance, explicit partial
+failure, immutable answer handles, and retry-safe action lifecycles.
 
-**MCP-A is an MCP profile.** Every MCP-A server is an MCP server; every MCP-A client is an MCP client. MCP-A is purpose-designed around three properties -- **performance, precision, efficiency** -- so an agent gets a faster, more precise answer while the expensive client-side model does less work.
+The design hypothesis is deliberately narrower than the original claim: for
+multi-source or semantically rich workloads, moving classification,
+deterministic computation, and consolidation server-side may reduce client
+orchestration. Conformance alone does not prove that it is faster, cheaper, or
+more accurate. Those claims require the measurements in
+[`BENCHMARKING.md`](./BENCHMARKING.md).
 
-## What MCP-A Is
+## Why a profile
 
-Raw MCP is token-expensive on the LLM side. Static tool catalogs bloat the context window; raw tool results come back unconsolidated, forcing the model to read, reconcile, and re-reason across many calls; multi-turn re-classifies every time. The LLM does the integration work, burning tokens and latency.
+MCP defines transport, lifecycle, authorization integration, tools, resources,
+Tasks, and Elicitation. It does not prescribe how a compiled-answer service
+represents domain semantics, query plans, provenance, partial coverage, or
+multi-effect actions. MCP-A supplies that application-level contract without
+redefining MCP.
 
-MCP-A moves that work server-side and hands the LLM a compiled result. Seven answer primitives are the levers: **discover** (dynamic, RBAC-filtered domain catalog replaces static tool definitions), **schema** (a domain's formal ontology -- entities, fields, types, relationships, units, allowed aggregations -- so a caller knows the shape before it queries), **query** (server classifies intent, fans out, returns one consolidated answer), **action** (executes a state-changing operation with the same RBAC-scoped, compiled-result contract), **follow_up** (drills/polls against an answer_id with no re-classification), **context** (primes identity/preferences/RBAC server-side so answers come personalized), **explain** (exposes routing/sources/confidence so the model can trust a compiled answer without re-deriving it).
+The profile is useful when a server owns meaningful cross-source semantics. A
+small server with a few direct, well-designed tools may not need it.
 
-The answer can come back as **structured, ontology-conformant output** -- typed objects against a domain's published schema -- not only prose. And MCP-A adds **domain ontology introspection** (the dedicated `schema` primitive) so a caller can ask what a domain's entities, fields, types, and allowed aggregations are before it queries.
+## The seven tools
 
-Net result: fewer round-trips, smaller context, less LLM-side reasoning per answer, and precise typed values instead of prose approximations. MCP-A trades a cheap server-side model for client-side token and latency savings.
+| Tool | Responsibility |
+|---|---|
+| `mcpa.discover` | List authorization-filtered information domains. |
+| `mcpa.schema` | Describe ontology, query capabilities, and operations. |
+| `mcpa.query` | Execute a natural-language or typed query plan. |
+| `mcpa.follow_up` | Create an immutable refinement of an answer. |
+| `mcpa.context` | Manage bounded user-approved preferences and memory. |
+| `mcpa.explain` | Return a safe, authorization-filtered execution explanation. |
+| `mcpa.action` | Resolve and execute typed, approved, retry-safe operations. |
 
-## Three Pillars: Performance, Precision, Efficiency
+These are ordinary MCP tools. Support is negotiated in MCP `initialize`, tool
+availability comes from `tools/list`, results use `structuredContent`, durable
+async work uses MCP Tasks, and interactive input may use MCP Elicitation.
 
-Three properties define MCP-A. They are the *why*.
+## Design boundaries
 
-- **Performance** -- MCP-A returns results *faster* than traditional MCP. Server-side compilation plus fewer client round-trips means lower end-to-end latency for the agent: one compiled call instead of N tool calls the model has to orchestrate and stitch.
-- **Precision** -- MCP-A ensures precision in what comes back. **Aggregations** are correct server-side rollups, not LLM-estimated. **Disambiguation** (entity and term resolution) happens server-side, not guessed by the model. Structured, typed values over prose approximations.
-- **Efficiency** -- MCP-A is cost-effective on the *server* side. It uses a less expensive inference model to classify, structure, and compile the response, so the expensive client-side model does less work. Cheap model structures; expensive model consumes a finished result.
+- Identity comes from the MCP authorization context, never `user_id` in tool arguments.
+- An ontology, a query plan, and an output schema are distinct contracts.
+- Structured output includes the exact schema it validates against.
+- Claims link citations to specific prose or structured paths.
+- Source failures and conflicts are explicit; incomplete results cannot claim completeness.
+- Answer content is immutable; refinements receive new IDs.
+- Actions separate operation definitions from executions and record every effect.
+- Extensions live only under reverse-DNS namespaces.
 
-## The 6 MCP-A Primitives
+## Start here
 
-| # | Primitive | Responsibility |
-|---|-----------|----------------|
-| 1 | **discover** | "What can I ask about?" Returns a dynamic, RBAC-filtered, user-scoped catalog of *information domains* -- name, description, example questions, freshness, source systems, access scope. Optional semantic filter. Replaces static tool definitions. |
-| 2 | **schema** | Return a domain's formal ontology/schema -- entities, fields, types, relationships, units, allowed aggregations -- so a caller knows the shape before it queries. The domain-introspection counterpart to `discover`; `discover` stays a thin catalog, `schema` carries the cacheable, versioned ontology surface. |
-| 3 | **query** | The compiled answer. NL question → classify → fan-out → consolidated, source-cited answer. Returns answer + citations + `recommended_tool` (drill paths) + an `answer_id` handle. Supports structured-response mode when `response_schema` is supplied. |
-| 4 | **follow_up** | Drill/refine against a prior `answer_id`, and poll long-running compiles. Keeps multi-turn cheap -- no re-classification. |
-| 5 | **context** | Prime/inspect identity, preferences, memory, and access scope so answers are personalized and RBAC-correct. |
-| 6 | **explain** | Inspect *how* an answer was compiled: routing decision, sources hit, confidence, freshness, latency, and *why* it routed that way. The trust primitive for a compiled (non-deterministic) answer -- optionally carries `feedback` to improve future routing. |
+1. Read [`SPEC.md`](./SPEC.md) and the normative
+   [`MCP-BINDING.md`](./MCP-BINDING.md).
+2. Review [`THREAT-MODEL.md`](./THREAT-MODEL.md) before implementing handles,
+   memory, source retrieval, or actions.
+3. Walk through [`examples/`](./examples/) and the
+   [`QUICKSTART.md`](./QUICKSTART.md).
+4. Run the validation suite described in [`VALIDATION.md`](./VALIDATION.md).
+5. Use [`CONFORMANCE.md`](./CONFORMANCE.md) for a version-scoped runtime claim.
 
-## Repository layout
+## Repository map
 
-What's here, and where to start:
+| Path | Purpose |
+|---|---|
+| [`SPEC.md`](./SPEC.md) | Normative application semantics. |
+| [`MCP-BINDING.md`](./MCP-BINDING.md) | Normative MCP wire binding. |
+| [`schemas/`](./schemas/) | Draft 2020-12 request, response, error, and capability schemas. |
+| [`examples/`](./examples/) | Current 2.0 vectors plus archived 1.1 vectors. |
+| [`THREAT-MODEL.md`](./THREAT-MODEL.md) | Threats, trust boundaries, and required mitigations. |
+| [`BENCHMARKING.md`](./BENCHMARKING.md) | Reproducible performance and quality claim rules. |
+| [`CONFORMANCE.md`](./CONFORMANCE.md) | Feature bundles and executable/runtime requirements. |
+| [`guides/`](./guides/) | Non-normative implementation guidance and migration notes. |
+| [`MAEP/`](./MAEP/) | Enhancement proposals and governance history. |
+| [`REVIEW-REMEDIATION.md`](./REVIEW-REMEDIATION.md) | Traceability from design critique to changes. |
 
-| Path | What it is |
-|------|------------|
-| [`SPEC.md`](./SPEC.md) | The normative specification (v1.1.0-beta, DRAFT) — the behavior contract for the seven primitives, `schema` introspection, structured-response mode, the error model, and conformance levels. |
-| [`schemas/`](./schemas/) | JSON Schema (draft 2020-12) request/response contracts for every primitive, plus shared `common.defs.json` and `error.json`. The machine-readable counterpart to `SPEC.md`. |
-| [`examples/`](./examples/) | One coherent end-to-end worked scenario (request/response per step) with a narrative walkthrough. Every file validates against `schemas/`. Start here to see the profile in action. |
-| [`guides/`](./guides/) | Non-normative implementer guides (complement `SPEC.md`): how to surface an underlying GraphQL/REST/SQL API beneath the seven primitives, build GraphQL queries from the `schema` ontology, and prompt LLMs for intent classification and query building. |
-| [`CONFORMANCE.md`](./CONFORMANCE.md) | Checkable conformance matrix (Core / Full / Extended) and a per-primitive self-audit checklist traceable to the spec. |
-| [`QUICKSTART.md`](./QUICKSTART.md) | Implementation guide: go from an existing MCP server to a conformant MCP-A server. |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | How to contribute — issues vs. MAEPs, repo layout, and PR ground rules. |
-| [`RFC-PROCESS.md`](./RFC-PROCESS.md) | The MAEP (MCP-A Enhancement Proposal) governance process and publication paths. |
-| [`POSITIONING.md`](./POSITIONING.md) | Naming, landscape positioning vs RAG, and relationship to MCP. |
-| [`MAEP/`](./MAEP/) | MCP-A Enhancement Proposals: the MAEP process (`README.md`), the submission `TEMPLATE.md`, and filed proposals (e.g., `MAEP/0001-structured-responses-and-introspection.md`, Accepted; `MAEP/0002-session-management.md`, Draft). |
+## Maturity
 
-## Project Index
+`2.0.0-beta` is a breaking design draft, not a production standard. Stable
+release requires independent implementations, cross-language interop,
+benchmarks, adversarial review, and hosted schema bundles. See SPEC §24.
 
-- **`SPEC.md`** — Formal specification (v1.1.0-beta, DRAFT). The behavior contract for the seven primitives, plus `schema` introspection and structured-response mode.
-- **`schemas/`** — JSON Schema (draft 2020-12) contracts for each primitive's request/response.
-- **`examples/`** — End-to-end worked scenario; every example validates against `schemas/`.
-- **`CONFORMANCE.md`** — Conformance matrix and per-primitive self-audit checklist.
-- **`QUICKSTART.md`** — Build your first MCP-A server.
-- **`MAEP/`** — MCP-A Enhancement Proposals. `MAEP/README.md` (the process), `MAEP/TEMPLATE.md` (submission template), `MAEP/0001-structured-responses-and-introspection.md` (Accepted: the `schema` primitive and structured-response mode), and `MAEP/0002-session-management.md` (Draft: session management hook + Full-tier capability).
-- **`POSITIONING.md`** — Naming, landscape positioning vs RAG, and relationship to MCP.
-- **`RFC-PROCESS.md`** — How MCP-A evolves as a public standard. MAEP (MCP-A Enhancement Proposal) process model and publication paths.
-
-## Guides
-
-[`guides/`](./guides/) holds **non-normative** implementer guides that complement
-`SPEC.md` (the normative contract). They walk through putting a real backend
-behind the seven primitives:
-
-- [`guides/surfacing-apis.md`](./guides/surfacing-apis.md) — expose an underlying GraphQL/REST/SQL API beneath MCP-A using the seven primitives as the MCP tools a client sees.
-- [`guides/graphql-query-builder.md`](./guides/graphql-query-builder.md) — build a GraphQL query dynamically from a `schema` ontology response plus a parsed intent.
-- [`guides/rest-api-mapping.md`](./guides/rest-api-mapping.md) — surface a REST backend: map entities/fields/relationships onto collections, projections, and sub-resources, and compute aggregations by fetching rows and reducing deterministically server-side (REST has no native aggregation).
-- [`guides/sql-query-builder.md`](./guides/sql-query-builder.md) — surface a SQL warehouse (the canonical deterministic-aggregation backend): map entities→tables, fields→columns, relationships→JOINs, and allowed_aggregations→aggregate functions + GROUP BY, emitting parameterized, injection-safe SQL.
-- [`guides/intent-and-query-building.md`](./guides/intent-and-query-building.md) — prompt templates for LLM intent classification, routing, and query building.
-
-These complement the GraphQL-backed worked examples (steps 14–18), the
-REST-backed examples (steps 19–22), and the SQL-backed examples (steps 23–25) in
-[`examples/`](./examples/).
-
-## Why This Exists
-
-AI-data interfaces today are brittle. Agents call individual tools deterministically. When answers require fanout across multiple systems, classification of intent, or disambiguation of context, the burden falls on the caller to stitch it together. And when a compiled answer is non-deterministic (could come from different sources, different paths), there's no standard way to explain why it routed the way it did -- no trust.
-
-MCP-A fixes this. It says: **If you're building a compiled-answer layer, these are the seven primitives. Here's what each one does, what it takes as input, what it returns. Here's how you route it. Here's how you explain it.**
-
-Vendor-neutral. Publishable. Built to be a public standard from day one.
-
-## Contributing
-
-Changes to MCP-A go through the **MAEP** (MCP-A Enhancement Proposal) process. See [CONTRIBUTING.md](./CONTRIBUTING.md) for issues-vs-MAEPs and PR ground rules, and [RFC-PROCESS.md](./RFC-PROCESS.md) for the full governance model.
-
-Long-term aim: graduate MCP-A into MCP's own SEP (Specification Enhancement Proposal) track at the Agentic AI Foundation, so it becomes part of the base protocol rather than a separate profile.
-
-If you are building an MCP-A conformant server or have feedback on the spec, open an issue or a PR.
-
-## License
-
-Spec text is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](./LICENSE).
+Specification text and examples are licensed under
+[CC BY 4.0](./LICENSE). Implementation code in this repository is limited to
+validation utilities; adopters should make their own implementation licensing
+clear.

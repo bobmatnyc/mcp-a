@@ -1,52 +1,35 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/discover.response.json",
-  "title": "MCP-A discover Response",
-  "description": "Response for the discover primitive (SPEC §1). MUST include the `server` capability block and an RBAC-filtered `domains` catalog.",
+  "$id": "https://mcp-a.dev/schemas/2.0/discover.response.json",
+  "title": "mcpa.discover Response",
   "type": "object",
   "properties": {
-    "server": {
-      "type": "object",
-      "description": "Server capability block. MUST be present in every discover response (SPEC §1). Clients SHOULD use this to determine capabilities rather than probing individual primitives.",
-      "properties": {
-        "mcp_a_version": {
-          "type": "string",
-          "description": "MCP-A version the server implements (e.g., '1.0-beta')."
-        },
-        "conformance_level": {
-          "type": "string",
-          "description": "Declared conformance level (SPEC §Conformance Levels). MUST accurately reflect what the server implements.",
-          "enum": ["Core", "Full", "Extended"]
-        },
-        "supported_primitives": {
-          "type": "array",
-          "description": "Exactly which primitives this server exposes. If a primitive is absent, clients MUST NOT call it.",
-          "items": {
-            "type": "string",
-            "enum": ["discover", "schema", "query", "action", "follow_up", "context", "explain"]
-          },
-          "uniqueItems": true
-        }
-      },
-      "required": ["mcp_a_version", "conformance_level", "supported_primitives"],
-      "additionalProperties": false
-    },
     "domains": {
       "type": "array",
-      "description": "RBAC-filtered catalog of information domains available to the user. Domains the user cannot access MUST NOT appear.",
-      "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/Domain" }
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain_id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "schema_version": { "type": "string" },
+          "schema_id": { "type": "string", "format": "uri" },
+          "status": { "type": "string", "enum": ["active", "deprecated", "read_only"] },
+          "freshness_seconds": { "type": "integer", "minimum": 0 },
+          "scope_summary": { "type": "string" },
+          "example_questions": { "type": "array", "items": { "type": "string", "maxLength": 500 }, "maxItems": 20 },
+          "query_guidance": { "type": "string", "maxLength": 4000 },
+          "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
+        },
+        "required": ["domain_id", "name", "description", "schema_version", "schema_id", "status", "freshness_seconds", "scope_summary"],
+        "additionalProperties": false
+      }
     },
-    "total_count": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Total number of domains available to the user (may exceed the returned page size)."
-    },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "RFC3339 timestamp of discovery time."
-    }
+    "next_cursor": { "type": "string" },
+    "total_count": { "type": "integer", "minimum": 0 },
+    "as_of": { "type": "string", "format": "date-time" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["server", "domains"],
+  "required": ["domains", "as_of"],
   "additionalProperties": false
 }

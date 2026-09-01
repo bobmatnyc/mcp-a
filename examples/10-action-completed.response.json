@@ -1,0 +1,15 @@
+{
+  "execution_id": "exe_01K47RBR6RACJ8JXY9TD3P5W1V",
+  "operation_id": "sales.create_follow_up",
+  "operation_version": "1.2.0",
+  "status": "completed",
+  "attempt": 1,
+  "normalized_inputs": { "account_id": "acct_100", "title": "Acme follow-up", "due_date": "2026-09-04" },
+  "effects": [
+    { "effect_id": "eff_task", "status": "applied", "kind": "created", "resource": "Task", "source_system": "crm-api", "entity_id": "task_8841", "reversible": true, "after": { "status": "open" } }
+  ],
+  "result": { "task_id": "task_8841" },
+  "created_at": "2026-09-01T13:15:00Z",
+  "updated_at": "2026-09-01T13:16:10Z",
+  "audit_id": "audit_01K47RC1T2AR4T6Z9Q0ZP5VY2D"
+}

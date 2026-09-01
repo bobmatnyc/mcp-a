@@ -1,0 +1,51 @@
+{
+  "execution_id": "exe_01K47T48H8C1VG7RPNGSW8RB0A",
+  "operation_id": "sales.create_task_and_notify",
+  "operation_version": "1.0.0",
+  "status": "partially_completed",
+  "attempt": 1,
+  "normalized_inputs": {
+    "account_id": "acct_100",
+    "title": "Acme renewal follow-up",
+    "notify_channel": "sales-ops"
+  },
+  "effects": [
+    {
+      "effect_id": "eff_task",
+      "status": "applied",
+      "kind": "created",
+      "resource": "Task",
+      "source_system": "crm-api",
+      "entity_id": "task_9001",
+      "reversible": true,
+      "safe_detail": "The CRM task was created."
+    },
+    {
+      "effect_id": "eff_notification",
+      "status": "failed",
+      "kind": "sent",
+      "resource": "Notification",
+      "source_system": "messaging-api",
+      "reversible": false,
+      "safe_detail": "The notification was not sent.",
+      "error": {
+        "code": "SOURCE_UNAVAILABLE",
+        "message": "The messaging source did not respond.",
+        "retryable": true,
+        "retry_after_ms": 30000
+      }
+    }
+  ],
+  "error": {
+    "code": "ACTION_FAILED",
+    "message": "One of two effects failed; inspect effects before retrying.",
+    "retryable": false,
+    "detail": {
+      "applied_effect_ids": ["eff_task"],
+      "failed_effect_ids": ["eff_notification"]
+    }
+  },
+  "created_at": "2026-09-01T13:20:00Z",
+  "updated_at": "2026-09-01T13:20:04Z",
+  "audit_id": "audit_01K47T4C33N7Y3C3MSP6WTZ5AQ"
+}

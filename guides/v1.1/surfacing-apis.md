@@ -4,14 +4,16 @@ Version: 1.1.0-beta
 Date: 2026-07-01
 ---
 
+> Archived 1.1 design. It is not current 2.0 implementation guidance.
+
 # Surfacing an Underlying API beneath MCP-A
 
 > **Status: non-normative guide.** This document is explanatory implementation
-> guidance complementing [`../SPEC.md`](../SPEC.md). It is not part of the
+> guidance complementing [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md). It is not part of the
 > behavior contract; where it differs from the SPEC or
-> [`../schemas/`](../schemas/), those win. The server-side config shapes shown
+> [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/), those win. The server-side config shapes shown
 > here (the "domain→backend binding") are an illustrative convention the spec
-> does **not** define — see [`../CONFORMANCE.md`](../CONFORMANCE.md) for actual
+> does **not** define — see [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md) for actual
 > requirements.
 
 You have an existing API — a GraphQL endpoint, a REST service, a SQL warehouse —
@@ -27,7 +29,7 @@ client sees.** A client that lists tools sees `discover`, `schema`, `query`,
 `action`, `follow_up`, `context`, and `explain` — and nothing about your
 GraphQL schema, your REST routes, or your SQL tables.
 
-[`../SPEC.md`](../SPEC.md#relationship-to-mcp--lower-level-protocols) is explicit:
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#relationship-to-mcp--lower-level-protocols) is explicit:
 
 > **Key principle**: Every MCP-A server is a conformant MCP server. MCP-A
 > defines specific tools (the **seven primitives**: discover, schema, query,
@@ -48,7 +50,7 @@ So your GraphQL API is a **source system**, reached through a **domain**, called
 **server-side** inside the implementation of `query`/`action`. The client never
 calls GraphQL. It calls `query`; the server calls GraphQL. This is the
 **Compile Server-Side; Hand the LLM a Finished Result** design principle
-([`../SPEC.md`](../SPEC.md#design-principles)) made concrete.
+([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#design-principles)) made concrete.
 
 ```
 Client (expensive model)                MCP-A server (cheap model)         Backend
@@ -65,8 +67,8 @@ Client (expensive model)                MCP-A server (cheap model)         Backe
 Because every MCP-A server *is* an MCP server, you expose the primitives the
 ordinary MCP way: `tools/list` returns one tool per primitive, each tool's
 `inputSchema` is that primitive's request schema from
-[`../schemas/`](../schemas/), and the result shape is the corresponding response
-schema. The files in [`../schemas/`](../schemas/) are the source of truth for
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/), and the result shape is the corresponding response
+schema. The files in [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/) are the source of truth for
 these shapes.
 
 The following `tools/list`-style registration is **illustrative** (it omits five
@@ -105,7 +107,7 @@ primitives for brevity and uses `$ref` to the published schema `$id`s):
 
 Many MCP runtimes want an inlined `inputSchema` rather than a `$ref`. In that
 case, embed the contents of each request schema directly. Whatever you inline
-MUST stay byte-faithful to [`../schemas/`](../schemas/); the schemas are the
+MUST stay byte-faithful to [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/); the schemas are the
 contract.
 
 ## The domain → backend binding (non-normative convention)
@@ -135,13 +137,13 @@ domains:
 Two things to note about how this private binding *surfaces*:
 
 - The only part a client ever sees is `source_systems`. In
-  [`../examples/14-discover-graphql.response.json`](../examples/14-discover-graphql.response.json)
+  [`../../examples/v1.1/14-discover-graphql.response.json`](../../examples/v1.1/14-discover-graphql.response.json)
   the `storefront` domain advertises `"source_systems": ["storefront-graphql"]`.
   That string is opaque provenance — it tells the client *that* a GraphQL
   backend is involved, not *where* it is or *how* to call it.
 - `explain` may name the same source system in `domains_queried` and
   `source_latencies`/`confidence_per_source`
-  (see [`../examples/18-explain-graphql.response.json`](../examples/18-explain-graphql.response.json)),
+  (see [`../../examples/v1.1/18-explain-graphql.response.json`](../../examples/v1.1/18-explain-graphql.response.json)),
   again as provenance, never as a callable handle.
 
 Everything else in the binding — endpoint URL, credentials, the
@@ -157,14 +159,14 @@ example files:
 1. **discover** — the client lists domains and finds `storefront` with
    `source_systems: ["storefront-graphql"]`, `status: "active"`, and
    `freshness_seconds: 120`.
-   → [`14-discover-graphql.request.json`](../examples/14-discover-graphql.request.json)
-   / [`14-discover-graphql.response.json`](../examples/14-discover-graphql.response.json)
+   → [`14-discover-graphql.request.json`](../../examples/v1.1/14-discover-graphql.request.json)
+   / [`14-discover-graphql.response.json`](../../examples/v1.1/14-discover-graphql.response.json)
 
 2. **schema** — the client introspects the `storefront` ontology: `Product`,
    `Order`, `LineItem`, their fields/types/units, `allowed_aggregations`, and
    relationships. This is the input the query builder consumes.
-   → [`15-schema-graphql.request.json`](../examples/15-schema-graphql.request.json)
-   / [`15-schema-graphql.response.json`](../examples/15-schema-graphql.response.json)
+   → [`15-schema-graphql.request.json`](../../examples/v1.1/15-schema-graphql.request.json)
+   / [`15-schema-graphql.response.json`](../../examples/v1.1/15-schema-graphql.response.json)
 
 3. **query** — the client asks *"Total revenue and order count by region for
    paid and shipped orders this quarter"* with
@@ -183,20 +185,20 @@ example files:
       LLM-estimated.
    4. The server **consolidates** the result into the typed `structured` payload
       and attaches `citations` and a `routing_decision`.
-   → [`16-query-graphql-structured.request.json`](../examples/16-query-graphql-structured.request.json)
-   / [`16-query-graphql-structured.response.json`](../examples/16-query-graphql-structured.response.json)
+   → [`16-query-graphql-structured.request.json`](../../examples/v1.1/16-query-graphql-structured.request.json)
+   / [`16-query-graphql-structured.response.json`](../../examples/v1.1/16-query-graphql-structured.response.json)
 
 4. **action** — the same domain handles writes. *"Create a 10% discount code
    SUMMER10 for apparel…"* maps server-side to the `discountCreate` GraphQL
    mutation; the response records an `invoked` effect on `storefront-graphql`.
-   → [`17-action-graphql.request.json`](../examples/17-action-graphql.request.json)
-   / [`17-action-graphql.response.json`](../examples/17-action-graphql.response.json)
+   → [`17-action-graphql.request.json`](../../examples/v1.1/17-action-graphql.request.json)
+   / [`17-action-graphql.response.json`](../../examples/v1.1/17-action-graphql.response.json)
 
 5. **explain** — the client inspects the routing for the query's `answer_id`
    (`ans-graphql-7a1f`): which domains were considered/queried, the rationale,
    per-source latency and confidence.
-   → [`18-explain-graphql.request.json`](../examples/18-explain-graphql.request.json)
-   / [`18-explain-graphql.response.json`](../examples/18-explain-graphql.response.json)
+   → [`18-explain-graphql.request.json`](../../examples/v1.1/18-explain-graphql.request.json)
+   / [`18-explain-graphql.response.json`](../../examples/v1.1/18-explain-graphql.response.json)
 
 The client issued five primitive calls and received compiled, cited, typed
 results. It never saw a line of GraphQL.
@@ -228,7 +230,7 @@ algorithm, an illustrative Python snippet, and a worked example:
 
 ## See also
 
-- [`../SPEC.md`](../SPEC.md#relationship-to-mcp--lower-level-protocols) — Relationship to MCP (normative).
+- [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#relationship-to-mcp--lower-level-protocols) — Relationship to MCP (normative).
 - [`graphql-query-builder.md`](./graphql-query-builder.md) — how step 3.2 actually works.
 - [`intent-and-query-building.md`](./intent-and-query-building.md) — the prompts behind steps 3.1–3.2.
-- [`../examples/`](../examples/) — the worked storefront files referenced above.
+- [`../../examples/v1.1/`](../../examples/v1.1/) — the worked storefront files referenced above.

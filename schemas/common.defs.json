@@ -1,339 +1,245 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/common.defs.json",
-  "title": "MCP-A Common Definitions",
-  "description": "Shared $defs referenced by the MCP-A primitive request/response schemas. Reference a definition via, e.g., {\"$ref\": \"https://mcp-a.dev/schemas/common.defs.json#/$defs/Citation\"}.",
+  "$id": "https://mcp-a.dev/schemas/2.0/common.defs.json",
+  "title": "MCP-A 2.0 Common Definitions",
   "$defs": {
-    "Citation": {
-      "title": "Citation",
-      "description": "A source reference supporting a compiled answer (SPEC §3 query response).",
+    "Extensions": {
       "type": "object",
-      "properties": {
-        "source_system": {
-          "type": "string",
-          "description": "Underlying source system the cited data came from (e.g., 'salesforce-crm'). MUST be present on every citation."
-        },
-        "domain_id": {
-          "type": "string",
-          "description": "The information domain the citation belongs to (e.g., 'salesforce-crm')."
-        },
-        "entity_type": {
-          "type": "string",
-          "description": "Entity type of the cited record (e.g., 'Account', 'Opportunity')."
-        },
-        "entity_id": {
-          "type": "string",
-          "description": "Identifier of the cited record."
-        },
-        "snippet": {
-          "type": "string",
-          "description": "The relevant quote/excerpt from the source."
-        },
-        "confidence": {
-          "type": "number",
-          "minimum": 0.0,
-          "maximum": 1.0,
-          "description": "Per-citation confidence in [0.0, 1.0], present only when confidence was requested."
-        }
-      },
-      "required": ["source_system"],
-      "additionalProperties": false
-    },
-    "ClarificationField": {
-      "title": "ClarificationField",
-      "description": "A single piece of information the service still needs before it can execute an action (SPEC §action, clarification rounds). The field `name` is the key the client MUST use in the continuation request's `inputs` map.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Field key the client MUST supply in the continuation `inputs` map (e.g., 'due_date')."
-        },
-        "description": {
-          "type": "string",
-          "description": "Human-readable explanation of what this field is and why it is needed."
-        },
-        "type": {
-          "type": "string",
-          "description": "Expected value type for the supplied input.",
-          "enum": ["string", "number", "integer", "boolean", "object", "array"]
-        },
-        "required": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether the service cannot proceed without this field. Defaults to true when omitted."
-        },
-        "example": {
-          "description": "An example value to guide the client (any JSON type)."
-        },
-        "enum": {
-          "type": "array",
-          "description": "Permitted values, when the field is constrained to a fixed set.",
-          "items": {}
-        }
-      },
-      "required": ["name"],
-      "additionalProperties": false
-    },
-    "ActionEffect": {
-      "title": "ActionEffect",
-      "description": "A single state-changing effect the service applied at a source system while executing an action (SPEC §action response). Returned in `effects` when status is `completed`.",
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "The kind of state change applied.",
-          "enum": ["created", "updated", "deleted", "sent", "invoked", "other"]
-        },
-        "resource": {
-          "type": "string",
-          "description": "The resource type acted on (e.g., 'Task', 'Opportunity', 'email')."
-        },
-        "source_system": {
-          "type": "string",
-          "description": "Underlying source system where the effect was applied (e.g., 'salesforce-crm'). MUST be present on every effect."
-        },
-        "entity_id": {
-          "type": "string",
-          "description": "Identifier of the affected record, when one exists (e.g., the ID of a created task)."
-        },
-        "detail": {
-          "type": "object",
-          "description": "Optional implementation-defined context about the effect.",
-          "additionalProperties": true
-        }
-      },
-      "required": ["kind", "resource", "source_system"],
-      "additionalProperties": false
-    },
-    "Domain": {
-      "title": "Domain",
-      "description": "An information domain entry returned by discover (SPEC §1).",
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Stable domain identifier (e.g., 'salesforce-crm')."
-        },
-        "name": {
-          "type": "string",
-          "description": "Human-readable domain name."
-        },
-        "description": {
-          "type": "string",
-          "description": "What questions this domain can answer."
-        },
-        "example_questions": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Sample questions this domain can answer."
-        },
-        "source_systems": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Names of the underlying source systems backing this domain."
-        },
-        "freshness_seconds": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Age of the data in this domain, in seconds. MUST be returned so clients can decide whether to ask."
-        },
-        "access_scope": {
-          "type": "string",
-          "description": "Scope at which the domain is shared (e.g., 'user-scoped', 'team-scoped', 'org-scoped')."
-        },
-        "requires_context_fields": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Context fields a query MUST supply to use this domain (e.g., ['account_id'] for a per-account domain)."
-        },
-        "status": {
-          "type": "string",
-          "description": "Optional domain status marker.",
-          "enum": ["active", "deprecated", "read-only"]
-        },
-        "natural_language_guidance": {
-          "type": "string",
-          "description": "OPTIONAL query-building guidance (SPEC §1, MAEP-0005). Prose suggestions and example questions that help a client construct well-formed questions for this domain. Full-tier; a Core server omits it. SHOULD be auto-derived from the underlying backend's own metadata (GraphQL/OpenAPI descriptions, SQL comments) rather than hand-authored."
-        },
-        "query_templates": {
-          "type": "array",
-          "description": "OPTIONAL structured query patterns the domain prefers (SPEC §1, MAEP-0005). Each template is a human-readable pattern with `{variable}` placeholders and the enumerated choices for each. Lets a client construct queries by template instantiation instead of free-form text. Content grows freely; the field shape is fixed.",
-          "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/QueryTemplate" }
-        },
-        "disambiguation_hints": {
-          "type": "array",
-          "description": "OPTIONAL hints about fields that commonly require clarification (SPEC §1, MAEP-0005). Helps a client anticipate what the server may ask for in a query clarification round.",
-          "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/DisambiguationHint" }
-        }
-      },
-      "required": ["id", "name", "description", "freshness_seconds"],
-      "additionalProperties": false
-    },
-    "QueryTemplate": {
-      "title": "QueryTemplate",
-      "description": "A structured query pattern advertised on a discover Domain entry (SPEC §1, MAEP-0005). `template` carries `{variable}` placeholders; `variables[]` enumerates the allowed choices for each placeholder.",
-      "type": "object",
-      "properties": {
-        "template": {
-          "type": "string",
-          "description": "Human-readable pattern with `{variable}` placeholders (e.g., 'revenue by {time_period} for {customer_type}')."
-        },
-        "variables": {
-          "type": "array",
-          "description": "Enumerated choices for each `{variable}` placeholder in `template`.",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "Placeholder name, matching a `{name}` token in `template`."
-              },
-              "values": {
-                "type": "array",
-                "items": { "type": "string" },
-                "description": "Allowed values the client may substitute for this placeholder."
-              }
-            },
-            "required": ["name", "values"],
-            "additionalProperties": false
-          }
-        }
-      },
-      "required": ["template"],
-      "additionalProperties": false
-    },
-    "DisambiguationHint": {
-      "title": "DisambiguationHint",
-      "description": "A hint about a field that commonly needs clarification when querying a domain (SPEC §1, MAEP-0005).",
-      "type": "object",
-      "properties": {
-        "field": {
-          "type": "string",
-          "description": "Field name or concept (e.g., 'customer_id', 'time_period')."
-        },
-        "description": {
-          "type": "string",
-          "description": "What the field is and what happens if it is omitted (e.g., a default is applied, or a clarification round is triggered)."
-        },
-        "example": {
-          "type": "string",
-          "description": "An example value for the field."
-        }
-      },
-      "required": ["field"],
-      "additionalProperties": false
-    },
-    "AccessScope": {
-      "title": "AccessScope",
-      "description": "The set of resources the authenticated user is authorized to see (SPEC §5 context, §RBAC). RBAC-evaluated per-request, never cached. Additional dimensions are permitted.",
-      "type": "object",
-      "properties": {
-        "teams": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Teams/orgs the user belongs to."
-        },
-        "accounts": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Accounts (multi-tenant) the user can access."
-        },
-        "roles": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Roles assigned to the user."
-        },
-        "resource_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Resource tags the user is permitted to see."
-        }
-      },
+      "description": "Namespaced extension values. Keys use reverse-DNS owner/name form.",
+      "propertyNames": { "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+/[A-Za-z0-9._-]+$" },
       "additionalProperties": true
     },
-    "RoutingDecision": {
-      "title": "RoutingDecision",
-      "description": "How and why an answer was routed (SPEC §6 explain.routing_decision; also referenced by query/follow_up responses when debug/explain requested).",
+    "ComputedScope": {
       "type": "object",
       "properties": {
-        "algorithm": {
-          "type": "string",
-          "description": "Routing algorithm used (e.g., 'semantic-match', 'user-history', 'heuristic')."
-        },
-        "rationale": {
-          "type": "string",
-          "description": "Human-readable explanation of why the chosen domains were selected."
-        },
-        "alternative_routings": {
+        "summary": { "type": "string", "minLength": 1 },
+        "scope_hash": { "type": "string", "minLength": 16 },
+        "policy_version": { "type": "string" }
+      },
+      "required": ["summary"],
+      "additionalProperties": false
+    },
+    "SourceStatus": {
+      "type": "object",
+      "properties": {
+        "source_system": { "type": "string", "minLength": 1 },
+        "domain_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["success", "stale", "timeout", "unavailable", "denied", "invalid", "skipped"] },
+        "required": { "type": "boolean", "default": true },
+        "as_of": { "type": "string", "format": "date-time" },
+        "retrieved_at": { "type": "string", "format": "date-time" },
+        "latency_ms": { "type": "integer", "minimum": 0 },
+        "safe_detail": { "type": "string" },
+        "error_code": { "type": "string" }
+      },
+      "required": ["source_system", "status", "required"],
+      "additionalProperties": false
+    },
+    "Claim": {
+      "type": "object",
+      "properties": {
+        "claim_id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string" },
+        "structured_paths": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      },
+      "required": ["claim_id"],
+      "anyOf": [{ "required": ["text"] }, { "required": ["structured_paths"] }],
+      "additionalProperties": false
+    },
+    "Citation": {
+      "type": "object",
+      "properties": {
+        "citation_id": { "type": "string", "minLength": 1 },
+        "claim_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "source_system": { "type": "string", "minLength": 1 },
+        "domain_id": { "type": "string" },
+        "entity_type": { "type": "string" },
+        "entity_id": { "type": "string" },
+        "record_version": { "type": "string" },
+        "source_uri": { "type": "string", "format": "uri" },
+        "snippet": { "type": "string", "maxLength": 4000 },
+        "retrieved_at": { "type": "string", "format": "date-time" },
+        "as_of": { "type": "string", "format": "date-time" }
+      },
+      "required": ["citation_id", "claim_ids", "source_system", "retrieved_at"],
+      "additionalProperties": false
+    },
+    "Conflict": {
+      "type": "object",
+      "properties": {
+        "conflict_id": { "type": "string" },
+        "claim_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "description": { "type": "string" },
+        "resolution": { "type": "string", "enum": ["resolved", "unresolved", "deferred"] },
+        "rationale": { "type": "string" }
+      },
+      "required": ["conflict_id", "description", "resolution"],
+      "additionalProperties": false
+    },
+    "InputField": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "required": { "type": "boolean", "default": true },
+        "sensitive": { "type": "boolean", "default": false },
+        "schema": { "type": "object" }
+      },
+      "required": ["name", "schema"],
+      "additionalProperties": false
+    },
+    "InputRequest": {
+      "type": "object",
+      "properties": {
+        "request_id": { "type": "string" },
+        "message": { "type": "string" },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/InputField" }, "minItems": 1 },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["request_id", "message", "fields"],
+      "additionalProperties": false
+    },
+    "Filter": {
+      "type": "object",
+      "properties": {
+        "field": { "type": "string" },
+        "op": { "type": "string", "enum": ["eq", "ne", "lt", "lte", "gt", "gte", "in", "not_in", "contains", "starts_with", "is_null"] },
+        "value": true
+      },
+      "required": ["field", "op"],
+      "additionalProperties": false
+    },
+    "Aggregation": {
+      "type": "object",
+      "properties": {
+        "measure": { "type": "string" },
+        "function": { "type": "string", "enum": ["count", "count_distinct", "sum", "avg", "min", "max"] },
+        "as": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" }
+      },
+      "required": ["measure", "function", "as"],
+      "additionalProperties": false
+    },
+    "QueryPlan": {
+      "type": "object",
+      "properties": {
+        "schema_versions": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+        "domains": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "select": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "filters": { "type": "array", "items": { "$ref": "#/$defs/Filter" } },
+        "group_by": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "aggregations": { "type": "array", "items": { "$ref": "#/$defs/Aggregation" } },
+        "order_by": {
           "type": "array",
-          "description": "Routings considered but not chosen, with their relative scores.",
           "items": {
             "type": "object",
-            "properties": {
-              "domains": {
-                "type": "array",
-                "items": { "type": "string" },
-                "description": "Domains in this alternative routing."
-              },
-              "score": {
-                "type": "number",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "description": "Relative confidence of this alternative in [0.0, 1.0]."
-              },
-              "reason": {
-                "type": "string",
-                "description": "Why this alternative was scored as it was."
-              }
-            },
-            "required": ["domains", "score"],
+            "properties": { "field": { "type": "string" }, "direction": { "type": "string", "enum": ["asc", "desc"] } },
+            "required": ["field", "direction"],
             "additionalProperties": false
           }
         },
-        "reused_prior_routing": {
-          "type": "boolean",
-          "description": "For follow_up: true when the prior query's routing was reused rather than re-routed (SPEC §4)."
-        }
+        "limit": { "type": "integer", "minimum": 1 },
+        "consistency": { "type": "string", "enum": ["best_effort", "snapshot", "source_native"] },
+        "extensions": { "$ref": "#/$defs/Extensions" }
       },
-      "required": ["rationale"],
+      "required": ["schema_versions", "domains"],
+      "anyOf": [{ "required": ["select"] }, { "required": ["aggregations"] }],
       "additionalProperties": false
     },
-    "ResponseSchemaTarget": {
-      "title": "ResponseSchemaTarget",
-      "description": "Tagged discriminator naming the target schema for a structured-response query (SPEC §3, RESOLVED beta). Clients MUST inspect `kind` to interpret `value`.",
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "Discriminator selecting how `value` is interpreted: a named schema, a domain's published ontology, or an inline schema definition.",
-          "enum": ["schema_ref", "domain", "inline"]
-        },
-        "value": {
-          "description": "For kind=schema_ref: a schema name (string). For kind=domain: a domain_id (string). For kind=inline: an inline schema definition (object).",
-          "type": ["string", "object"]
-        }
-      },
-      "required": ["kind", "value"],
-      "additionalProperties": false,
-      "allOf": [
+    "ResponseTarget": {
+      "oneOf": [
         {
-          "if": { "properties": { "kind": { "const": "schema_ref" } } },
-          "then": { "properties": { "value": { "type": "string" } } }
+          "type": "object",
+          "properties": { "kind": { "const": "schema_ref" }, "schema_id": { "type": "string", "format": "uri" } },
+          "required": ["kind", "schema_id"],
+          "additionalProperties": false
         },
         {
-          "if": { "properties": { "kind": { "const": "domain" } } },
-          "then": { "properties": { "value": { "type": "string" } } }
+          "type": "object",
+          "properties": { "kind": { "const": "inline" }, "schema": { "type": "object" } },
+          "required": ["kind", "schema"],
+          "additionalProperties": false
         },
         {
-          "if": { "properties": { "kind": { "const": "inline" } } },
-          "then": { "properties": { "value": { "type": "object" } } }
+          "type": "object",
+          "properties": { "kind": { "const": "derive" } },
+          "required": ["kind"],
+          "additionalProperties": false
         }
       ]
     },
-    "Error": {
-      "title": "Error",
-      "description": "Abstract MCP-A error object (SPEC §Error Model). See error.json for the canonical standalone definition.",
-      "$ref": "https://mcp-a.dev/schemas/error.json"
+    "Routing": {
+      "type": "object",
+      "properties": {
+        "reuse": { "type": "string", "enum": ["new", "reused", "replanned", "recomputed_for_authorization"] },
+        "domains": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "plan_digest": { "type": "string" },
+        "safe_rationale": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "confidence_method": { "type": "string" }
+      },
+      "required": ["reuse", "domains", "plan_digest"],
+      "dependentRequired": { "confidence": ["confidence_method"] },
+      "additionalProperties": false
+    },
+    "Precondition": {
+      "type": "object",
+      "properties": {
+        "resource": { "type": "string" },
+        "kind": { "type": "string", "enum": ["version", "exists", "not_exists", "field_equals"] },
+        "field": { "type": "string" },
+        "expected": true
+      },
+      "required": ["resource", "kind"],
+      "additionalProperties": false
+    },
+    "OperationSummary": {
+      "type": "object",
+      "properties": {
+        "operation_id": { "type": "string" },
+        "operation_version": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "input_schema_id": { "type": "string", "format": "uri" },
+        "input_schema": { "type": "object" },
+        "required_scopes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "risk": { "type": "string", "enum": ["low", "moderate", "high", "critical"] },
+        "effect_class": { "type": "string", "enum": ["read", "create", "update", "delete", "send", "financial", "execute", "other"] },
+        "approval": { "type": "string", "enum": ["never", "policy", "always"] },
+        "idempotency": { "type": "string", "enum": ["required", "supported", "unsafe"] },
+        "reversible": { "type": "boolean" },
+        "compensation_operation_id": { "type": "string" }
+      },
+      "required": ["operation_id", "operation_version", "title", "input_schema_id", "input_schema", "risk", "effect_class", "approval", "idempotency", "reversible"],
+      "additionalProperties": false
+    },
+    "ActionEffect": {
+      "type": "object",
+      "properties": {
+        "effect_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["planned", "applied", "failed", "compensated", "compensation_failed"] },
+        "kind": { "type": "string", "enum": ["created", "updated", "deleted", "sent", "financial", "executed", "other"] },
+        "resource": { "type": "string" },
+        "source_system": { "type": "string" },
+        "entity_id": { "type": "string" },
+        "reversible": { "type": "boolean" },
+        "before": true,
+        "after": true,
+        "safe_detail": { "type": "string" },
+        "error": { "$ref": "https://mcp-a.dev/schemas/2.0/error.json" }
+      },
+      "required": ["effect_id", "status", "kind", "resource", "source_system", "reversible"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "enum": ["failed", "compensation_failed"] } },
+            "required": ["status"]
+          },
+          "then": { "required": ["error"] },
+          "else": { "not": { "required": ["error"] } }
+        }
+      ],
+      "additionalProperties": false
     }
   }
 }

@@ -44,8 +44,8 @@ def test_error_codes_non_empty() -> None:
     What: Asserts _ERROR_CODES has exactly 11 entries matching the known enum.
     Test: Change error.json to remove the 'code' enum and this test fails.
     """
-    assert len(_ERROR_CODES) == 11, (
-        f"Expected 11 error codes in error.json, got {len(_ERROR_CODES)}: {_ERROR_CODES}"
+    assert len(_ERROR_CODES) == 18, (
+        f"Expected 18 error codes in error.json, got {len(_ERROR_CODES)}: {_ERROR_CODES}"
     )
 
 

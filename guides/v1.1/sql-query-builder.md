@@ -4,12 +4,14 @@ Version: 1.1.0-beta
 Date: 2026-07-01
 ---
 
+> Archived 1.1 design. It is not current 2.0 implementation guidance.
+
 # Building SQL Queries from the `schema` Ontology
 
 > **Status: non-normative guide.** This document is explanatory implementation
-> guidance complementing [`../SPEC.md`](../SPEC.md). It is not part of the
+> guidance complementing [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md). It is not part of the
 > behavior contract; where it differs from the SPEC or
-> [`../schemas/`](../schemas/), those win. The Python snippet below is
+> [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/), those win. The Python snippet below is
 > **illustrative** — a readable reference to copy and adapt, **not** a
 > maintained module shipped with this repo.
 
@@ -24,7 +26,7 @@ them from a SQL backend, the server builds a `SELECT` statement **dynamically**
 from two inputs:
 
 1. The domain's **ontology** — exactly what the `schema` primitive returns
-   ([`../schemas/schema.response.json`](../schemas/schema.response.json)):
+   ([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json)):
    entities, fields (with `type`, `unit`, `nullable`, `allowed_aggregations`,
    `enum_values`), and relationships (with `cardinality`).
 2. A **parsed intent** — the structured query plan produced by the server-side
@@ -37,8 +39,8 @@ SQL is the **canonical deterministic-aggregation backend.** Where REST has to
 fetch rows and reduce them in application code
 ([`rest-api-mapping.md`](./rest-api-mapping.md)), SQL computes rollups *in the
 database* with aggregate functions and `GROUP BY`. This is exactly what
-[`../SPEC.md`](../SPEC.md#aggregation-correctness-conformance) (Aggregation
-Correctness Conformance) and [`../CONFORMANCE.md`](../CONFORMANCE.md) require:
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#aggregation-correctness-conformance) (Aggregation
+Correctness Conformance) and [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md) require:
 
 > All advertised aggregations MUST be computed deterministically server-side via
 > database queries, GraphQL resolvers, or direct computation over source data
@@ -106,8 +108,8 @@ entity's identity (a `reference` field) — is always available and needs no
 `max`, and `count` on a dimension/enum field), only emit the aggregate function
 if that aggregation is in the field's `allowed_aggregations`. Anything else is a
 builder error that must surface as `AGGREGATION_NOT_ALLOWED`
-([`../SPEC.md`](../SPEC.md#error-model)), exactly as
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json)
+([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model)), exactly as
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json)
 does for the sales domain.
 
 ### SQL-injection safety
@@ -389,9 +391,9 @@ def build_sql(ontology: dict, intent: dict) -> tuple[str, list]:
 ## Worked example: revenue by product category
 
 Take the ontology from
-[`../examples/24-schema-sql.response.json`](../examples/24-schema-sql.response.json)
+[`../../examples/v1.1/24-schema-sql.response.json`](../../examples/v1.1/24-schema-sql.response.json)
 and the intent parsed from the structured `query` in
-[`../examples/25-query-sql.request.json`](../examples/25-query-sql.request.json)
+[`../../examples/v1.1/25-query-sql.request.json`](../../examples/v1.1/25-query-sql.request.json)
 (*"What was total revenue, total units, and number of sales by product category
 last quarter?"*):
 
@@ -419,7 +421,7 @@ entity's identity — always permitted and not gated — so all three pass the s
 guardrail. With `category` (on `DimProduct`) and `quarter`/`year` (on `DimDate`)
 the builder joins both dimensions; the emitted SQL is the parameterized statement
 recorded as the citation snippet in
-[`../examples/25-query-sql.response.json`](../examples/25-query-sql.response.json):
+[`../../examples/v1.1/25-query-sql.response.json`](../../examples/v1.1/25-query-sql.response.json):
 
 ```sql
 SELECT p.category,
@@ -451,8 +453,8 @@ and records the generated SQL as a citation snippet under
 **Now the failure case.** If the intent had asked for `("category", "avg")` —
 averaging an enum — step 5 finds `avg ∉ DimProduct.category.allowed_aggregations`
 (which is `["count"]`) and raises `AggregationNotAllowed`. The server returns
-`AGGREGATION_NOT_ALLOWED` per [`../SPEC.md`](../SPEC.md#error-model), mirroring
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json).
+`AGGREGATION_NOT_ALLOWED` per [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model), mirroring
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json).
 It does not run a meaningless query.
 
 ## The precision pillar
@@ -462,7 +464,7 @@ where that is most direct: the `SELECT ... GROUP BY` does the math in the
 database. The builder's only job is to ensure it asks for *only* the aggregations
 the ontology promised (step 5) and to keep the statement injection-safe (bound
 values + allow-listed identifiers). Writes to a SQL-backed domain map to the
-`action` primitive ([`../SPEC.md`](../SPEC.md#7-action)) — an `INSERT`/`UPDATE`/
+`action` primitive ([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#7-action)) — an `INSERT`/`UPDATE`/
 `DELETE` recorded as an `ActionEffect` — exactly as the REST guide describes for
 its mutations.
 
@@ -472,4 +474,4 @@ its mutations.
 - [`rest-api-mapping.md`](./rest-api-mapping.md) — the REST backend, where aggregation is fetch-and-reduce.
 - [`graphql-query-builder.md`](./graphql-query-builder.md) — the GraphQL backend builder this mirrors.
 - [`intent-and-query-building.md`](./intent-and-query-building.md) — how the `intent` dict is produced.
-- [`../schemas/schema.response.json`](../schemas/schema.response.json) — the ontology contract this consumes.
+- [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json) — the ontology contract this consumes.
