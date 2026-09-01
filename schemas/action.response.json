@@ -1,81 +1,117 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/action.response.json",
-  "title": "MCP-A action Response",
-  "description": "Response for the action primitive (SPEC §action). `action_id` and `status` are always required. `clarification` is present only when status is `clarification_required`; `result`/`effects` when `completed`; `error` when `failed`. The action_id is stable across clarification rounds and usable with the explain primitive.",
+  "$id": "https://mcp-a.dev/schemas/2.0/action.response.json",
+  "title": "mcpa.action Response",
   "type": "object",
   "properties": {
-    "action_id": {
-      "type": "string",
-      "description": "Opaque handle identifying this action. Stable across clarification rounds; usable with explain. MUST be present."
-    },
-    "status": {
-      "type": "string",
-      "description": "Outcome of this turn (SPEC §action). `clarification_required` = the service needs more info; `completed` = the action was executed; `failed` = execution failed.",
-      "enum": ["clarification_required", "completed", "failed"]
-    },
-    "summary": {
-      "type": "string",
-      "description": "Human-readable account of what was done (when completed), what is still needed (when clarification_required), or what went wrong (when failed)."
-    },
-    "clarification": {
+    "execution_id": { "type": "string" },
+    "operation_id": { "type": "string" },
+    "operation_version": { "type": "string" },
+    "status": { "type": "string", "enum": ["input_required", "approval_required", "preview", "completed", "partially_completed", "failed", "cancelled"] },
+    "attempt": { "type": "integer", "minimum": 1 },
+    "normalized_inputs": { "type": "object", "additionalProperties": true },
+    "input_request": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/InputRequest" },
+    "approval_request": {
       "type": "object",
-      "description": "Present only when status is `clarification_required`. Describes the information the service still needs before it can execute.",
       "properties": {
-        "needed": {
-          "type": "array",
-          "description": "The fields the client MUST supply in a continuation request's `inputs` map.",
-          "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/ClarificationField" }
-        },
-        "prompt": {
-          "type": "string",
-          "description": "Optional human-readable prompt summarizing what the client should provide."
-        }
+        "request_id": { "type": "string" },
+        "message": { "type": "string" },
+        "risk": { "type": "string", "enum": ["low", "moderate", "high", "critical"] },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "reversible": { "type": "boolean" },
+        "planned_effects": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ActionEffect" }, "minItems": 1 }
       },
-      "required": ["needed"],
+      "required": ["request_id", "message", "risk", "reversible", "planned_effects"],
       "additionalProperties": false
     },
-    "result": {
-      "type": ["object", "array", "string", "null"],
-      "description": "Outcome payload of a completed action (e.g., the created record). Present only when status is `completed`."
-    },
-    "effects": {
-      "type": "array",
-      "description": "The state-changing effects the service applied. Present when status is `completed`.",
-      "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/ActionEffect" }
-    },
-    "citations": {
-      "type": "array",
-      "description": "Optional sources supporting how the action was interpreted or which records it touched, each with at least source_system.",
-      "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/Citation" }
-    },
-    "error": {
-      "description": "Present only when status is `failed`. The abstract MCP-A error describing the failure.",
-      "$ref": "https://mcp-a.dev/schemas/error.json"
-    },
-    "routing_decision": {
-      "description": "Routing/interpretation detail, present only when debug/explain was requested (see explain primitive).",
-      "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/RoutingDecision"
-    },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "RFC3339 timestamp when the action turn completed."
-    }
+    "effects": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ActionEffect" }, "minItems": 1 },
+    "result": true,
+    "error": { "$ref": "https://mcp-a.dev/schemas/2.0/error.json" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "audit_id": { "type": "string" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["action_id", "status"],
-  "allOf": [
+  "required": ["execution_id", "operation_id", "operation_version", "status", "attempt", "normalized_inputs", "created_at", "updated_at", "audit_id"],
+  "oneOf": [
     {
-      "if": { "properties": { "status": { "const": "clarification_required" } }, "required": ["status"] },
-      "then": { "required": ["clarification"] }
+      "properties": { "status": { "const": "input_required" } },
+      "required": ["input_request"],
+      "not": { "anyOf": [{ "required": ["approval_request"] }, { "required": ["effects"] }, { "required": ["result"] }, { "required": ["error"] }] }
     },
     {
-      "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] },
-      "then": { "required": ["error"] }
+      "properties": { "status": { "const": "approval_required" } },
+      "required": ["approval_request"],
+      "not": { "anyOf": [{ "required": ["input_request"] }, { "required": ["effects"] }, { "required": ["result"] }, { "required": ["error"] }] }
     },
     {
-      "if": { "properties": { "status": { "const": "completed" } }, "required": ["status"] },
-      "then": { "required": ["effects"] }
+      "properties": {
+        "status": { "const": "preview" },
+        "effects": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ActionEffect" },
+              { "properties": { "status": { "const": "planned" } } }
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["effects"],
+      "not": { "anyOf": [{ "required": ["input_request"] }, { "required": ["approval_request"] }, { "required": ["result"] }, { "required": ["error"] }] }
+    },
+    {
+      "properties": {
+        "status": { "const": "completed" },
+        "effects": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ActionEffect" },
+              { "properties": { "status": { "enum": ["applied", "compensated"] } } }
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["effects", "result"],
+      "not": { "anyOf": [{ "required": ["input_request"] }, { "required": ["approval_request"] }, { "required": ["error"] }] }
+    },
+    {
+      "properties": {
+        "status": { "const": "partially_completed" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ActionEffect" },
+          "minItems": 2,
+          "allOf": [
+            {
+              "contains": {
+                "properties": { "status": { "enum": ["applied", "compensated"] } },
+                "required": ["status"]
+              }
+            },
+            {
+              "contains": {
+                "properties": { "status": { "enum": ["failed", "compensation_failed"] } },
+                "required": ["status"]
+              }
+            }
+          ]
+        }
+      },
+      "required": ["effects", "error"],
+      "not": { "anyOf": [{ "required": ["input_request"] }, { "required": ["approval_request"] }] }
+    },
+    {
+      "properties": { "status": { "const": "failed" } },
+      "required": ["error"],
+      "not": { "anyOf": [{ "required": ["input_request"] }, { "required": ["approval_request"] }, { "required": ["result"] }, { "required": ["effects"] }] }
+    },
+    {
+      "properties": { "status": { "const": "cancelled" } },
+      "not": { "anyOf": [{ "required": ["input_request"] }, { "required": ["approval_request"] }, { "required": ["result"] }, { "required": ["effects"] }, { "required": ["error"] }] }
     }
   ],
   "additionalProperties": false

@@ -1,92 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/explain.request.json",
-  "title": "MCP-A explain Request",
-  "description": "Request for the explain primitive (SPEC §6): inspect how an answer was routed and why, and optionally provide feedback. The subject is identified by EITHER an `answer_id` (from a prior query/follow_up) OR an `action_id` (from a prior action, MAEP-0003 §3.5) — exactly one MUST be present. Both shapes require `user_id`; users may only explain their own subjects.",
-  "$defs": {
+  "$id": "https://mcp-a.dev/schemas/2.0/explain.request.json",
+  "title": "mcpa.explain Request",
+  "type": "object",
+  "properties": {
+    "answer_id": { "type": "string" },
+    "execution_id": { "type": "string" },
+    "include_plan": { "type": "boolean", "default": true },
+    "include_source_statuses": { "type": "boolean", "default": true },
     "feedback": {
       "type": "object",
-      "description": "Optional feedback to improve future routing.",
       "properties": {
-        "helpful": {
-          "type": "boolean",
-          "description": "Whether the answer was helpful."
-        },
-        "comments": {
-          "type": "string",
-          "description": "Free-text feedback."
-        },
-        "expected_sources": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Sources the user thought should have been queried."
-        }
+        "helpful": { "type": "boolean" },
+        "comments": { "type": "string", "maxLength": 4000 },
+        "expected_sources": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "delete_prior_feedback": { "type": "boolean", "default": false }
       },
-      "additionalProperties": false
-    }
-  },
-  "oneOf": [
-    {
-      "title": "explain answer Request",
-      "type": "object",
-      "description": "Inspect how an answer was routed. Identified by `answer_id`.",
-      "properties": {
-        "answer_id": {
-          "type": "string",
-          "description": "answer_id from a prior query response. Matched against user_id; users may only explain their own answers."
-        },
-        "user_id": {
-          "type": "string",
-          "description": "Authenticated user ID."
-        },
-        "include_latency": {
-          "type": "boolean",
-          "default": true,
-          "description": "Include per-source latencies (default true)."
-        },
-        "include_confidence": {
-          "type": "boolean",
-          "default": true,
-          "description": "Include per-source confidences (default true)."
-        },
-        "feedback": {
-          "$ref": "#/$defs/feedback"
-        }
-      },
-      "required": ["answer_id", "user_id"],
-      "not": { "required": ["action_id"] },
       "additionalProperties": false
     },
-    {
-      "title": "explain action Request",
-      "type": "object",
-      "description": "Inspect how a state-changing action was interpreted and routed. Identified by `action_id` (MAEP-0003 §3.5).",
-      "properties": {
-        "action_id": {
-          "type": "string",
-          "description": "action_id from a prior action response. Matched against user_id; users may only explain their own actions."
-        },
-        "user_id": {
-          "type": "string",
-          "description": "Authenticated user ID."
-        },
-        "include_latency": {
-          "type": "boolean",
-          "default": true,
-          "description": "Include per-source latencies (default true)."
-        },
-        "include_confidence": {
-          "type": "boolean",
-          "default": true,
-          "description": "Include per-source confidences (default true)."
-        },
-        "feedback": {
-          "$ref": "#/$defs/feedback"
-        }
-      },
-      "required": ["action_id", "user_id"],
-      "not": { "required": ["answer_id"] },
-      "additionalProperties": false
-    }
-  ]
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
+  },
+  "oneOf": [
+    { "required": ["answer_id"], "not": { "required": ["execution_id"] } },
+    { "required": ["execution_id"], "not": { "required": ["answer_id"] } }
+  ],
+  "additionalProperties": false
 }

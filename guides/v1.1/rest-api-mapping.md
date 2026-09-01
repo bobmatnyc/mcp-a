@@ -4,12 +4,14 @@ Version: 1.1.0-beta
 Date: 2026-07-01
 ---
 
+> Archived 1.1 design. It is not current 2.0 implementation guidance.
+
 # Surfacing a REST Backend beneath MCP-A
 
 > **Status: non-normative guide.** This document is explanatory implementation
-> guidance complementing [`../SPEC.md`](../SPEC.md). It is not part of the
+> guidance complementing [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md). It is not part of the
 > behavior contract; where it differs from the SPEC or
-> [`../schemas/`](../schemas/), those win. The Python snippet below is
+> [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/), those win. The Python snippet below is
 > **illustrative** — a readable reference to copy and adapt, **not** a
 > maintained module shipped with this repo.
 
@@ -25,7 +27,7 @@ them from a REST backend, the server plans an **HTTP request sequence**
 dynamically from two inputs:
 
 1. The domain's **ontology** — exactly what the `schema` primitive returns
-   ([`../schemas/schema.response.json`](../schemas/schema.response.json)):
+   ([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json)):
    entities, fields (with `type`, `unit`, `nullable`, `allowed_aggregations`,
    `enum_values`), and relationships (with `cardinality`).
 2. A **parsed intent** — the structured query plan produced by the server-side
@@ -40,8 +42,8 @@ SQL backends is that **REST has no native aggregation**. There is no `aggregate`
 resolver and no `GROUP BY`. So when an aggregation is requested, the server
 **fetches the matching rows and reduces them deterministically server-side** —
 which is exactly what
-[`../SPEC.md`](../SPEC.md#aggregation-correctness-conformance) (Aggregation
-Correctness Conformance) and [`../CONFORMANCE.md`](../CONFORMANCE.md) require:
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#aggregation-correctness-conformance) (Aggregation
+Correctness Conformance) and [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/CONFORMANCE.md) require:
 
 > All advertised aggregations MUST be computed deterministically server-side via
 > database queries, GraphQL resolvers, or direct computation over source data
@@ -107,8 +109,8 @@ entity's identity (a `reference` field) — is always available and needs no
 `max`, and `count` on a dimension/enum field), only compute it if that
 aggregation is in the field's `allowed_aggregations`. Anything else is a planner
 error that must surface as `AGGREGATION_NOT_ALLOWED`
-([`../SPEC.md`](../SPEC.md#error-model)), exactly as
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json)
+([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model)), exactly as
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json)
 does for the sales domain. Note the **cost/precision tradeoff**: because REST has
 no native rollup, a value aggregation may fetch many rows. The planner should
 project narrowly (`?fields=`), paginate, and filter server-side-first; the
@@ -317,9 +319,9 @@ def plan_rest(ontology: dict, intent: dict) -> dict:
 ## Worked example: open tickets by priority
 
 Take the ontology from
-[`../examples/20-schema-rest.response.json`](../examples/20-schema-rest.response.json)
+[`../../examples/v1.1/20-schema-rest.response.json`](../../examples/v1.1/20-schema-rest.response.json)
 and the intent parsed from the structured `query` in
-[`../examples/21-query-rest.request.json`](../examples/21-query-rest.request.json)
+[`../../examples/v1.1/21-query-rest.request.json`](../../examples/v1.1/21-query-rest.request.json)
 (*"How many open tickets do we have right now, broken down by priority?"*):
 
 ```python
@@ -350,7 +352,7 @@ The server pages through `/tickets?status=open`, projecting only `priority` and
 `ticket_id`, then buckets the fetched rows by `priority` and counts each bucket —
 **deterministic, server-side, computed not estimated**. It maps each bucket back
 to a typed object in the `query` response's `structured` array, exactly as in
-[`../examples/21-query-rest.response.json`](../examples/21-query-rest.response.json):
+[`../../examples/v1.1/21-query-rest.response.json`](../../examples/v1.1/21-query-rest.response.json):
 
 ```json
 "structured": [
@@ -365,14 +367,14 @@ and records the REST call sequence as a citation snippet under
 **Now the failure case.** If the intent had asked for `("status", "sum")` —
 summing an enum — step 5 finds `sum ∉ Ticket.status.allowed_aggregations` (which
 is `["count"]`) and raises `AggregationNotAllowed`. The server returns
-`AGGREGATION_NOT_ALLOWED` per [`../SPEC.md`](../SPEC.md#error-model), mirroring
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json).
+`AGGREGATION_NOT_ALLOWED` per [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model), mirroring
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json).
 It does not fetch rows and invent a number.
 
 ## The write case: REST writes → `action`
 
 Reads map to `query`; **writes map to the `action` primitive**
-([`../SPEC.md`](../SPEC.md#7-action)). A natural-language `action` request is
+([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#7-action)). A natural-language `action` request is
 interpreted server-side and turned into REST mutations:
 
 | HTTP method | Typical `ActionEffect.kind` |
@@ -385,11 +387,11 @@ interpreted server-side and turned into REST mutations:
 Each effect carries `resource`, `source_system`, an optional `entity_id`, and a
 `detail` object — a natural place to record the `method` and `path`. The worked
 write is *"Reply to ticket 4821 …"* in
-[`../examples/22-action-rest.request.json`](../examples/22-action-rest.request.json):
+[`../../examples/v1.1/22-action-rest.request.json`](../../examples/v1.1/22-action-rest.request.json):
 the server `POST`s a comment (a `created` effect) and `PATCH`es the ticket status
 (an `invoked` effect), both on `support-rest`, returning `status: "completed"` —
 see
-[`../examples/22-action-rest.response.json`](../examples/22-action-rest.response.json).
+[`../../examples/v1.1/22-action-rest.response.json`](../../examples/v1.1/22-action-rest.response.json).
 
 ## See also
 
@@ -397,4 +399,4 @@ see
 - [`sql-query-builder.md`](./sql-query-builder.md) — the SQL backend, where aggregation is native.
 - [`graphql-query-builder.md`](./graphql-query-builder.md) — the GraphQL backend builder this mirrors.
 - [`intent-and-query-building.md`](./intent-and-query-building.md) — how the `intent` dict is produced.
-- [`../schemas/schema.response.json`](../schemas/schema.response.json) — the ontology contract this consumes.
+- [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.response.json) — the ontology contract this consumes.

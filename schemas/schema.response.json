@@ -1,168 +1,130 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/schema.response.json",
-  "title": "MCP-A schema Response",
-  "description": "Response for the schema primitive (SPEC §2): a domain's formal ontology. Per §Aggregation Correctness, listed `allowed_aggregations` MUST be deterministically computable server-side, never LLM-estimated. Hierarchical drilling and operation introspection (MAEP-0004) add the OPTIONAL `truncated`, `expandable`, `max_depth`, `path`, `target`, and `actions` fields; existing domain-ontology responses are unaffected.",
+  "$id": "https://mcp-a.dev/schemas/2.0/schema.response.json",
+  "title": "mcpa.schema Response",
   "type": "object",
   "properties": {
-    "domain_id": {
-      "type": "string",
-      "description": "The domain this ontology describes."
+    "domain_id": { "type": "string" },
+    "schema_version": { "type": "string" },
+    "schema_id": { "type": "string", "format": "uri" },
+    "target": { "type": "string", "enum": ["domain", "query", "action"] },
+    "path": { "type": "string" },
+    "truncated": { "type": "boolean" },
+    "next_paths": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "ontology": {
+      "type": "object",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "semantic_id": { "type": "string" },
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "semantic_id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "data_type": { "type": "string", "enum": ["string", "boolean", "integer", "number", "decimal", "date", "date-time", "duration", "enum", "reference", "object", "array"] },
+                    "format": { "type": "string" },
+                    "unit": { "type": "string" },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+                    "precision": { "type": "integer", "minimum": 1 },
+                    "scale": { "type": "integer", "minimum": 0 },
+                    "timezone": { "type": "string" },
+                    "nullable": { "type": "boolean" },
+                    "role": { "type": "string", "enum": ["attribute", "dimension", "measure", "identifier"] },
+                    "allowed_aggregations": { "type": "array", "items": { "type": "string", "enum": ["count", "count_distinct", "sum", "avg", "min", "max"] }, "uniqueItems": true },
+                    "enum_values": { "type": "array", "items": true }
+                  },
+                  "required": ["semantic_id", "name", "data_type", "nullable", "role"],
+                  "additionalProperties": false
+                }
+              },
+              "relationships": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "semantic_id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "target_entity": { "type": "string" },
+                    "cardinality": { "type": "string", "enum": ["one_to_one", "one_to_many", "many_to_one", "many_to_many"] }
+                  },
+                  "required": ["semantic_id", "name", "target_entity", "cardinality"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["semantic_id", "name", "fields"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["entities"],
+      "additionalProperties": false
     },
-    "target": {
-      "type": "string",
-      "description": "Echo of the request `target` (MAEP-0004). Absent ⇒ `domain`.",
-      "enum": ["domain", "query", "action"]
+    "query_capabilities": {
+      "type": "object",
+      "properties": {
+        "query_plan_schema": { "type": "object" },
+        "max_limit": { "type": "integer", "minimum": 1 },
+        "supported_consistency": { "type": "array", "items": { "type": "string", "enum": ["best_effort", "snapshot", "source_native"] }, "uniqueItems": true },
+        "supports_filtering": { "type": "boolean" },
+        "supports_grouping": { "type": "boolean" },
+        "supports_ordering": { "type": "boolean" }
+      },
+      "required": ["query_plan_schema", "max_limit", "supported_consistency", "supports_filtering", "supports_grouping", "supports_ordering"],
+      "additionalProperties": false
     },
-    "path": {
-      "type": "string",
-      "description": "Echo of the node this response describes (the dotted `path` from the request; absent ⇒ the root) (MAEP-0004)."
-    },
-    "truncated": {
-      "type": "boolean",
-      "description": "True when deeper levels of the schema tree exist beyond the returned `depth` (MAEP-0004). Drill into them via a follow-up request with a `path`."
-    },
-    "expandable": {
+    "operations": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/OperationSummary" } },
+    "api_surfaces": {
       "type": "array",
-      "description": "Node paths the client MAY drill into via a follow-up request's `path` (MAEP-0004).",
-      "items": { "type": "string" }
-    },
-    "max_depth": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Total depth available in the schema tree from the addressed node (MAEP-0004)."
-    },
-    "actions": {
-      "type": "array",
-      "description": "Available action names, returned when `target` is `action` and no `action_id` was supplied (MAEP-0004).",
-      "items": { "type": "string" }
-    },
-    "schema_version": {
-      "type": "string",
-      "description": "The domain's own schema version, so callers can detect ontology changes."
-    },
-    "entities": {
-      "type": "array",
-      "description": "Entity types exposed by the domain.",
       "items": {
         "type": "object",
         "properties": {
-          "type": {
-            "type": "string",
-            "description": "Entity type name (e.g., 'Account')."
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable description of the entity."
-          },
-          "fields": {
-            "type": "array",
-            "description": "Fields available on the entity.",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Field name (e.g., 'arr')."
-                },
-                "type": {
-                  "type": "string",
-                  "description": "Field type (scalar/enum/date/reference/etc.)."
-                },
-                "unit": {
-                  "type": "string",
-                  "description": "Unit of measure (e.g., 'USD', 'days')."
-                },
-                "nullable": {
-                  "type": "boolean",
-                  "description": "Whether the field may be null."
-                },
-                "allowed_aggregations": {
-                  "type": "array",
-                  "items": { "type": "string" },
-                  "description": "Aggregations the domain computes deterministically server-side for this field (e.g., 'sum', 'avg', 'count', 'min', 'max'). A caller may request only these. MUST NOT include any aggregation that is estimated or LLM-derived (SPEC §Aggregation Correctness)."
-                },
-                "enum_values": {
-                  "type": "array",
-                  "items": { "type": "string" },
-                  "description": "Permitted values when type is enum."
-                }
-              },
-              "required": ["name", "type"],
-              "additionalProperties": false
-            }
-          },
-          "relationships": {
-            "type": "array",
-            "description": "Cross-entity relationships (omitted when include_relationships=false).",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Relationship name (e.g., 'opportunities')."
-                },
-                "target_entity": {
-                  "type": "string",
-                  "description": "The related entity type (e.g., 'Opportunity')."
-                },
-                "cardinality": {
-                  "type": "string",
-                  "description": "Relationship cardinality.",
-                  "enum": ["one-to-one", "one-to-many", "many-to-many"]
-                }
-              },
-              "required": ["name", "target_entity", "cardinality"],
-              "additionalProperties": false
-            }
-          }
+          "surface_id": { "type": "string" },
+          "format": { "type": "string", "enum": ["openapi-3.1", "graphql-sdl", "sql-catalog", "other"] },
+          "media_type": { "type": "string" },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "size": { "type": "integer", "minimum": 0 },
+          "resource_uri": { "type": "string", "format": "uri" },
+          "inline": { "type": ["string", "object"] }
         },
-        "required": ["type", "fields"],
+        "required": ["surface_id", "format", "media_type", "digest", "size"],
+        "oneOf": [{ "required": ["resource_uri"] }, { "required": ["inline"] }],
         "additionalProperties": false
       }
     },
-    "action_input_schema": {
-      "type": "object",
-      "description": "The input schema for a single action, returned when `target` is `action` and an `action_id` was supplied (MAEP-0004). An inline JSON Schema (draft 2020-12) describing the action's `inputs`, mirroring the fields the action would otherwise request via `clarification` rounds (see MAEP-0003).",
-      "additionalProperties": true
-    },
-    "api_surface": {
-      "type": "object",
-      "description": "OPTIONAL backend API-surface transparency (SPEC §2, MAEP-0005). Exposes the underlying backend surface (OpenAPI, GraphQL SDL, SQL catalog) a domain is mapped onto, supplementary to the primary `entities` ontology. Full-tier and additive; existing ontology responses are unaffected. If present it MUST accurately reflect the actual backend surface (it is a debug/routing aid and MUST be trustworthy).",
-      "properties": {
-        "format": {
-          "type": "string",
-          "description": "The format of `spec`. `other` MUST be documented by the server.",
-          "enum": ["openapi-3.1", "graphql-sdl", "sql-catalog", "other"]
-        },
-        "spec": {
-          "type": ["string", "object"],
-          "description": "The API surface itself: either inline (a string such as GraphQL SDL, or an object such as an OpenAPI document) or a reference (a string starting with 'http://' or 'https://' that the client can fetch)."
-        }
-      },
-      "required": ["format", "spec"],
-      "additionalProperties": false
-    },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "RFC3339 timestamp."
-    }
+    "as_of": { "type": "string", "format": "date-time" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["domain_id"],
+  "required": ["domain_id", "schema_version", "schema_id", "target", "truncated", "next_paths", "as_of"],
   "allOf": [
     {
-      "if": {
-        "anyOf": [
-          { "not": { "required": ["target"] } },
-          { "properties": { "target": { "enum": ["domain", "query"] } } }
-        ]
-      },
-      "then": { "required": ["entities"] }
+      "if": { "properties": { "target": { "const": "domain" } }, "required": ["target"] },
+      "then": {
+        "required": ["ontology"],
+        "not": { "anyOf": [{ "required": ["query_capabilities"] }, { "required": ["operations"] }] }
+      }
     },
     {
-      "if": { "required": ["action_input_schema"] },
-      "then": { "not": { "required": ["actions"] } }
+      "if": { "properties": { "target": { "const": "query" } }, "required": ["target"] },
+      "then": {
+        "required": ["query_capabilities"],
+        "not": { "anyOf": [{ "required": ["ontology"] }, { "required": ["operations"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "target": { "const": "action" } }, "required": ["target"] },
+      "then": {
+        "required": ["operations"],
+        "not": { "anyOf": [{ "required": ["ontology"] }, { "required": ["query_capabilities"] }] }
+      }
     }
   ],
   "additionalProperties": false

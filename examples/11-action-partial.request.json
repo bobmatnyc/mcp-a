@@ -1,0 +1,17 @@
+{
+  "operation_id": "sales.create_task_and_notify",
+  "operation_version": "1.0.0",
+  "inputs": {
+    "account_id": "acct_100",
+    "title": "Acme renewal follow-up",
+    "notify_channel": "sales-ops"
+  },
+  "idempotency_key": "01K47T3JSC1QW8N2F1J6K4M9PZ",
+  "preconditions": [
+    {
+      "kind": "version",
+      "resource": "Account/acct_100",
+      "expected": "42"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "domain_id": "sales-analytics",
+  "schema_version": "2.3.0",
+  "schema_id": "https://schemas.example.com/mcpa/sales-analytics/2.3.0",
+  "target": "action",
+  "truncated": false,
+  "next_paths": [],
+  "operations": [
+    {
+      "operation_id": "sales.create_follow_up",
+      "operation_version": "1.2.0",
+      "title": "Create account follow-up",
+      "description": "Create a follow-up task on an authorized account.",
+      "input_schema_id": "https://schemas.example.com/operations/sales.create_follow_up/1.2.0",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "account_id": { "type": "string" },
+          "title": { "type": "string" },
+          "due_date": { "type": "string", "format": "date" }
+        },
+        "required": ["account_id", "title", "due_date"],
+        "additionalProperties": false
+      },
+      "required_scopes": ["sales.tasks.write"],
+      "risk": "moderate",
+      "effect_class": "create",
+      "approval": "policy",
+      "idempotency": "required",
+      "reversible": true,
+      "compensation_operation_id": "sales.delete_follow_up"
+    },
+    {
+      "operation_id": "sales.create_task_and_notify",
+      "operation_version": "1.0.0",
+      "title": "Create task and notify sales operations",
+      "description": "Create an authorized CRM task and send a notification.",
+      "input_schema_id": "https://schemas.example.com/operations/sales.create_task_and_notify/1.0.0",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "account_id": { "type": "string" },
+          "title": { "type": "string" },
+          "notify_channel": { "type": "string" }
+        },
+        "required": ["account_id", "title", "notify_channel"],
+        "additionalProperties": false
+      },
+      "required_scopes": ["sales.tasks.write", "sales.notifications.send"],
+      "risk": "moderate",
+      "effect_class": "other",
+      "approval": "policy",
+      "idempotency": "required",
+      "reversible": false
+    }
+  ],
+  "as_of": "2026-09-01T13:00:00Z"
+}

@@ -1,72 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/explain.response.json",
-  "title": "MCP-A explain Response",
-  "description": "Response for the explain primitive (SPEC §6): the routing decision, domains considered/queried, per-source latencies and confidences, and feedback acknowledgement. Returns routing only for the user's own subjects. The subject is echoed as either `answer_id` (when an answer was explained) or `action_id` (when an action was explained, MAEP-0003 §3.5) — exactly one is present, mirroring the request.",
+  "$id": "https://mcp-a.dev/schemas/2.0/explain.response.json",
+  "title": "mcpa.explain Response",
   "type": "object",
   "properties": {
-    "answer_id": {
-      "type": "string",
-      "description": "The answer being explained. Present when the subject was an `answer_id`."
-    },
-    "action_id": {
-      "type": "string",
-      "description": "The action being explained. Present when the subject was an `action_id` (MAEP-0003 §3.5)."
-    },
-    "question_classified_as": {
-      "type": "string",
-      "description": "How the system understood the question."
-    },
-    "domains_considered": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "Domains evaluated during routing."
-    },
-    "domains_queried": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "Domains actually queried."
-    },
-    "routing_decision": {
-      "description": "Why the queried domains were chosen, including alternatives considered with scores. MUST include alternative routings (SPEC §6).",
-      "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/RoutingDecision"
-    },
-    "source_latencies": {
+    "answer_id": { "type": "string" },
+    "execution_id": { "type": "string" },
+    "safe_summary": { "type": "string" },
+    "executed_query_plan": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/QueryPlan" },
+    "routing": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Routing" },
+    "source_statuses": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/SourceStatus" } },
+    "conflicts": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Conflict" } },
+    "action_trace": {
       "type": "object",
-      "description": "Per-domain compile latency in milliseconds, keyed by domain_id.",
-      "additionalProperties": {
-        "type": "integer",
-        "minimum": 0,
-        "description": "Milliseconds to compile for this domain."
-      }
+      "properties": {
+        "operation_id": { "type": "string" },
+        "operation_version": { "type": "string" },
+        "normalized_inputs_digest": { "type": "string" },
+        "policy_decision": { "type": "string", "enum": ["allowed", "denied", "approval_required"] },
+        "approval_recorded": { "type": "boolean" },
+        "preconditions_satisfied": { "type": "boolean" },
+        "attempts": { "type": "integer", "minimum": 1 },
+        "effects": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ActionEffect" } }
+      },
+      "required": ["operation_id", "operation_version", "normalized_inputs_digest", "policy_decision", "approval_recorded", "preconditions_satisfied", "attempts", "effects"],
+      "additionalProperties": false
     },
-    "confidence_per_source": {
-      "type": "object",
-      "description": "Per-domain confidence in [0.0, 1.0], keyed by domain_id.",
-      "additionalProperties": {
-        "type": "number",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "description": "Confidence for this domain's contribution."
-      }
-    },
-    "feedback_recorded": {
-      "type": "boolean",
-      "description": "True if feedback was provided and recorded."
-    }
+    "feedback_recorded": { "type": "boolean" },
+    "feedback_expires_at": { "type": "string", "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["routing_decision"],
+  "required": ["safe_summary", "created_at"],
   "oneOf": [
-    {
-      "title": "explain answer Response",
-      "required": ["answer_id"],
-      "not": { "required": ["action_id"] }
-    },
-    {
-      "title": "explain action Response",
-      "required": ["action_id"],
-      "not": { "required": ["answer_id"] }
-    }
+    { "required": ["answer_id", "routing", "source_statuses", "conflicts"], "not": { "anyOf": [{ "required": ["execution_id"] }, { "required": ["action_trace"] }] } },
+    { "required": ["execution_id", "action_trace"], "not": { "anyOf": [{ "required": ["answer_id"] }, { "required": ["routing"] }, { "required": ["executed_query_plan"] }, { "required": ["source_statuses"] }, { "required": ["conflicts"] }] } }
   ],
+  "dependentRequired": { "feedback_expires_at": ["feedback_recorded"] },
   "additionalProperties": false
 }

@@ -5,8 +5,8 @@ Why: Each example in examples/ is a worked reference; if it fails validation
      against its schema, implementers will build non-conformant servers.
 What: Parametrize over MANIFEST; load instance + schema; collect ALL errors on
       failure and report them together (not just the first).
-Test: All 31 manifest entries must validate; 07-error-aggregation.response must
-      validate against error.json specifically.
+Test: Every current-version manifest entry must validate. Historical v1.1
+      vectors remain available but are not 2.0 conformance inputs.
 """
 from __future__ import annotations
 

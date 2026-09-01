@@ -440,5 +440,5 @@ Planned alongside MAEP-0001/0003/0004 in the `mcp-a-spec` repo. Gotchas for impl
 - [MAEP-0004](./0004-hierarchical-schema.md) — Hierarchical and operation-aware `schema`; this MAEP's `api_surface` field is a sibling extension to the MAEP-0004 drilling/introspection enhancements
 - [CONFORMANCE.md](../CONFORMANCE.md) — Conformance levels (Core vs. Full); these features are Full-tier
 - [schemas/common.defs.json](../schemas/common.defs.json) — The `ClarificationField` $def reused here
-- [guides/surfacing-apis.md](../guides/surfacing-apis.md) — Background on how backends are mapped to the MCP-A ontology; this MAEP makes that mapping partially visible
+- [archived 1.1 surfacing guide](../guides/v1.1/surfacing-apis.md) — Historical background on how backends were mapped to the 1.1 ontology
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) — MUST/SHOULD/MAY semantics

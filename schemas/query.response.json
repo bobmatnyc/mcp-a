@@ -1,90 +1,64 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/query.response.json",
-  "title": "MCP-A query Response",
-  "description": "Response for the query primitive (SPEC §3). Covers both prose mode and structured-response mode. `answer_id` and `citations` are always required; `structured`/`structured_schema_ref` are present only when `response_schema` was supplied.",
+  "$id": "https://mcp-a.dev/schemas/2.0/query.response.json",
+  "title": "mcpa.query and mcpa.follow_up Response",
   "type": "object",
   "properties": {
-    "answer": {
-      "type": ["string", "null"],
-      "description": "Compiled natural-language answer. MAY be omitted or null when structured output is returned and include_prose=false; a short summary when include_prose=true."
-    },
-    "structured": {
-      "type": ["object", "array"],
-      "description": "Typed objects conforming to the requested response_schema, with server-side aggregations and disambiguation applied. Present only when response_schema was supplied."
-    },
-    "structured_schema_ref": {
-      "type": "string",
-      "description": "Which schema/ontology the structured payload conforms to. MUST be set whenever `structured` is returned."
-    },
-    "answer_id": {
-      "type": "string",
-      "description": "Opaque handle for follow_up and explain calls. MUST be present."
-    },
-    "citations": {
-      "type": "array",
-      "description": "Sources supporting the answer. MUST be present (also for structured payloads), each with at least source_system.",
-      "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/Citation" }
-    },
-    "recommended_tool": {
-      "type": "object",
-      "description": "Optional drill path to a specific domain/tool for deeper detail.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Tool/domain ID for drilling deeper."
-        },
-        "reason": {
-          "type": "string",
-          "description": "Why this tool might provide more detail."
-        }
-      },
-      "required": ["id", "reason"],
-      "additionalProperties": false
-    },
-    "routing_decision": {
-      "description": "Routing detail, present only when debug/explain was requested (see explain primitive).",
-      "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/RoutingDecision"
-    },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "RFC3339 timestamp when the answer was compiled."
-    },
-    "is_draft": {
-      "type": "boolean",
-      "default": false,
-      "description": "OPTIONAL. True when options.draft was true and the answer is incomplete (poll via follow_up). Absent or false means a normal, complete answer; `is_draft: true` appears only on draft/partial answers (SPEC §3)."
-    },
-    "status": {
-      "type": "string",
-      "description": "OPTIONAL outcome discriminator (SPEC §3, MAEP-0005). Absent ⇒ a normal completed answer. `clarification_required` = the server understood the intent but needs more specificity before it can compile a full answer; the `clarification` object then describes what it needs. `completed` = a full answer is present.",
-      "enum": ["completed", "clarification_required"]
-    },
-    "clarification": {
-      "type": "object",
-      "description": "Present if and only if `status` is `clarification_required` (SPEC §3, MAEP-0005). Describes the information the server still needs, reusing the same `ClarificationField` shape as `action` (MAEP-0003). The client resolves it by re-calling `query` with `query_id` + `clarification_inputs`.",
-      "properties": {
-        "needed": {
-          "type": "array",
-          "description": "The fields the client supplies (keyed by `name`) in the continuation request's `clarification_inputs` map.",
-          "items": { "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/ClarificationField" }
-        },
-        "prompt": {
-          "type": "string",
-          "description": "Optional human-readable prompt summarizing what the client should provide."
-        }
-      },
-      "required": ["needed"],
-      "additionalProperties": false
-    }
+    "status": { "type": "string", "enum": ["completed", "partial", "input_required"] },
+    "query_id": { "type": "string" },
+    "input_request": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/InputRequest" },
+    "answer_id": { "type": "string" },
+    "parent_answer_id": { "type": "string" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "answer": { "type": "string" },
+    "structured": true,
+    "output_schema_id": { "type": "string", "format": "uri" },
+    "output_schema": { "type": "object" },
+    "executed_query_plan": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/QueryPlan" },
+    "claims": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Claim" }, "minItems": 1, "maxItems": 10000 },
+    "citations": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Citation" }, "minItems": 1, "maxItems": 10000 },
+    "conflicts": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Conflict" }, "maxItems": 1000 },
+    "completeness": { "type": "string", "enum": ["complete", "partial", "unknown"] },
+    "computed_scope": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/ComputedScope" },
+    "source_statuses": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/SourceStatus" }, "minItems": 1, "maxItems": 1000 },
+    "routing": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Routing" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "as_of": { "type": "string", "format": "date-time" },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
   },
-  "required": ["answer_id", "citations"],
-  "allOf": [
+  "required": ["status"],
+  "oneOf": [
     {
-      "if": { "properties": { "status": { "const": "clarification_required" } }, "required": ["status"] },
-      "then": { "required": ["clarification"] }
+      "title": "Completed answer",
+      "properties": { "status": { "const": "completed" }, "completeness": { "const": "complete" } },
+      "required": ["answer_id", "revision", "executed_query_plan", "claims", "citations", "conflicts", "completeness", "computed_scope", "source_statuses", "routing", "created_at", "as_of"],
+      "anyOf": [{ "required": ["answer"] }, { "required": ["structured"] }],
+      "not": { "anyOf": [{ "required": ["query_id"] }, { "required": ["input_request"] }] }
+    },
+    {
+      "title": "Partial answer",
+      "properties": { "status": { "const": "partial" }, "completeness": { "const": "partial" } },
+      "required": ["answer_id", "revision", "executed_query_plan", "claims", "citations", "conflicts", "completeness", "computed_scope", "source_statuses", "routing", "created_at", "as_of"],
+      "anyOf": [{ "required": ["answer"] }, { "required": ["structured"] }],
+      "not": { "anyOf": [{ "required": ["query_id"] }, { "required": ["input_request"] }] }
+    },
+    {
+      "title": "Input required",
+      "properties": { "status": { "const": "input_required" } },
+      "required": ["query_id", "input_request"],
+      "not": {
+        "anyOf": [
+          { "required": ["answer_id"] }, { "required": ["answer"] }, { "required": ["structured"] },
+          { "required": ["output_schema_id"] }, { "required": ["output_schema"] }, { "required": ["completeness"] },
+          { "required": ["source_statuses"] }, { "required": ["routing"] }
+        ]
+      }
     }
   ],
+  "dependentRequired": {
+    "structured": ["output_schema_id", "output_schema"],
+    "output_schema_id": ["structured", "output_schema"],
+    "output_schema": ["structured", "output_schema_id"]
+  },
   "additionalProperties": false
 }

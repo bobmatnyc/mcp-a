@@ -1,114 +1,54 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcp-a.dev/schemas/action.request.json",
-  "title": "MCP-A action Request",
-  "description": "Request for the action primitive (SPEC §action): ask the service to take a state-changing action on the user's behalf. Two shapes: a New Action request (natural-language intent) and a Continuation request (supply previously requested inputs against an existing action_id). Discriminated by the presence of `action_id`: a Continuation MUST include `action_id` + `inputs`; a New Action MUST NOT include `action_id`.",
-  "oneOf": [
-    {
-      "title": "action New Request",
+  "$id": "https://mcp-a.dev/schemas/2.0/action.request.json",
+  "title": "mcpa.action Request",
+  "type": "object",
+  "properties": {
+    "operation_id": { "type": "string" },
+    "operation_version": { "type": "string" },
+    "request": { "type": "string", "minLength": 1, "maxLength": 20000 },
+    "inputs": { "type": "object", "additionalProperties": true },
+    "execution_id": { "type": "string" },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
+    "preview": { "type": "boolean", "default": false },
+    "preconditions": { "type": "array", "items": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Precondition" } },
+    "approval": { "type": "string", "enum": ["approve", "deny"] },
+    "approval_request_id": { "type": "string" },
+    "cancel": { "const": true },
+    "options": {
       "type": "object",
-      "description": "Start a new action from a natural-language request. Identified by the absence of `action_id`.",
-      "properties": {
-        "request": {
-          "type": "string",
-          "description": "Natural-language description of the state-changing action to take (e.g., 'Create a follow-up task for the Acme renewal due Friday')."
-        },
-        "user_id": {
-          "type": "string",
-          "description": "Authenticated user ID. The action is performed on this user's behalf and RBAC is evaluated per call."
-        },
-        "context": {
-          "type": "object",
-          "description": "Optional per-call context.",
-          "properties": {
-            "account_id": {
-              "type": "string",
-              "description": "Account/tenant scope, if multi-tenant."
-            },
-            "user_preferences": {
-              "type": "object",
-              "description": "Per-call preference overrides (e.g., timezone, output format).",
-              "additionalProperties": true
-            }
-          },
-          "additionalProperties": false
-        },
-        "options": {
-          "type": "object",
-          "description": "Optional execution controls.",
-          "properties": {
-            "timeout_seconds": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 30,
-              "description": "Execution timeout (default 30). On exceed, return TIMEOUT."
-            },
-            "include_confidence": {
-              "type": "boolean",
-              "description": "Include the service's confidence in its interpretation of the request."
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "required": ["request", "user_id"],
-      "not": { "required": ["action_id"] },
+      "properties": { "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 300 } },
       "additionalProperties": false
     },
+    "extensions": { "$ref": "https://mcp-a.dev/schemas/2.0/common.defs.json#/$defs/Extensions" }
+  },
+  "oneOf": [
     {
-      "title": "action Continuation Request",
-      "type": "object",
-      "description": "Resume an action that returned `clarification_required` by supplying the requested inputs. Identified by the presence of `action_id`.",
-      "properties": {
-        "action_id": {
-          "type": "string",
-          "description": "The action_id returned by a prior action response that needed clarification. Stable across clarification rounds."
-        },
-        "user_id": {
-          "type": "string",
-          "description": "Authenticated user ID. MUST match the user who started the action; RBAC is re-evaluated on this call."
-        },
-        "inputs": {
-          "type": "object",
-          "description": "Values for the fields the prior response listed in `clarification.needed[].name`, keyed by those field names.",
-          "additionalProperties": true
-        },
-        "context": {
-          "type": "object",
-          "description": "Optional per-call context.",
-          "properties": {
-            "account_id": {
-              "type": "string",
-              "description": "Account/tenant scope, if multi-tenant."
-            },
-            "user_preferences": {
-              "type": "object",
-              "description": "Per-call preference overrides (e.g., timezone, output format).",
-              "additionalProperties": true
-            }
-          },
-          "additionalProperties": false
-        },
-        "options": {
-          "type": "object",
-          "description": "Optional execution controls.",
-          "properties": {
-            "timeout_seconds": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 30,
-              "description": "Execution timeout (default 30). On exceed, return TIMEOUT."
-            },
-            "include_confidence": {
-              "type": "boolean",
-              "description": "Include the service's confidence in its interpretation of the request."
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "required": ["action_id", "user_id", "inputs"],
-      "additionalProperties": false
+      "title": "Typed new action",
+      "required": ["operation_id", "inputs"],
+      "not": { "anyOf": [{ "required": ["request"] }, { "required": ["execution_id"] }, { "required": ["approval"] }, { "required": ["cancel"] }] }
+    },
+    {
+      "title": "Natural-language action resolution",
+      "required": ["request"],
+      "not": { "anyOf": [{ "required": ["operation_id"] }, { "required": ["operation_version"] }, { "required": ["inputs"] }, { "required": ["execution_id"] }, { "required": ["approval"] }, { "required": ["cancel"] }, { "required": ["idempotency_key"] }] }
+    },
+    {
+      "title": "Input continuation",
+      "required": ["execution_id", "inputs"],
+      "not": { "anyOf": [{ "required": ["operation_id"] }, { "required": ["operation_version"] }, { "required": ["request"] }, { "required": ["approval"] }, { "required": ["cancel"] }] }
+    },
+    {
+      "title": "Approval continuation",
+      "required": ["execution_id", "approval", "approval_request_id"],
+      "not": { "anyOf": [{ "required": ["operation_id"] }, { "required": ["operation_version"] }, { "required": ["request"] }, { "required": ["inputs"] }, { "required": ["cancel"] }] }
+    },
+    {
+      "title": "Cancellation continuation",
+      "required": ["execution_id", "cancel"],
+      "not": { "anyOf": [{ "required": ["operation_id"] }, { "required": ["operation_version"] }, { "required": ["request"] }, { "required": ["inputs"] }, { "required": ["approval"] }] }
     }
-  ]
+  ],
+  "dependentRequired": { "approval": ["approval_request_id"], "approval_request_id": ["approval"] },
+  "additionalProperties": false
 }

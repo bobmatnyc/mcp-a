@@ -1,0 +1,24 @@
+{
+  "status": "partial",
+  "answer_id": "ans_01K47QJFW2Q51QQNNYHJJ9HV9A",
+  "revision": 1,
+  "answer": "Finance revenue is available, but CRM pipeline was unavailable; this is not a complete cross-system answer.",
+  "executed_query_plan": {
+    "schema_versions": { "finance": "4.1.0", "crm": "8.0.0" },
+    "domains": ["finance", "crm"],
+    "select": ["finance.Revenue.current", "crm.Pipeline.open"],
+    "consistency": "best_effort"
+  },
+  "claims": [{ "claim_id": "claim_finance", "text": "Finance revenue is available." }],
+  "citations": [{ "citation_id": "cit_finance", "claim_ids": ["claim_finance"], "source_system": "finance-warehouse", "domain_id": "finance", "retrieved_at": "2026-09-01T13:10:02Z", "as_of": "2026-09-01T13:00:00Z" }],
+  "conflicts": [],
+  "completeness": "partial",
+  "computed_scope": { "summary": "Authorized finance and CRM scope" },
+  "source_statuses": [
+    { "source_system": "finance-warehouse", "domain_id": "finance", "status": "success", "required": true, "as_of": "2026-09-01T13:00:00Z", "retrieved_at": "2026-09-01T13:10:02Z", "latency_ms": 300 },
+    { "source_system": "crm-api", "domain_id": "crm", "status": "unavailable", "required": true, "latency_ms": 10000, "error_code": "SOURCE_UNAVAILABLE", "safe_detail": "The authorized CRM source did not respond." }
+  ],
+  "routing": { "reuse": "new", "domains": ["finance", "crm"], "plan_digest": "sha256:partial7", "safe_rationale": "Both domains were required by the question." },
+  "created_at": "2026-09-01T13:10:12Z",
+  "as_of": "2026-09-01T13:00:00Z"
+}

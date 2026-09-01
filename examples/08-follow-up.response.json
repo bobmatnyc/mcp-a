@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "answer_id": "ans_01K47R1AJX9QNT8Q0X6F6V4KZD",
+  "parent_answer_id": "ans_01K47P8K6YJ7KX8C2A5QK91R2Z",
+  "revision": 2,
+  "answer": "AMER has $18.25M in ARR in the authorized scope.",
+  "executed_query_plan": {
+    "schema_versions": { "sales-analytics": "2.3.0" },
+    "domains": ["sales-analytics"],
+    "filters": [{ "field": "sales.Account.region", "op": "eq", "value": "AMER" }],
+    "aggregations": [{ "measure": "sales.Account.arr", "function": "sum", "as": "total_arr" }],
+    "consistency": "snapshot"
+  },
+  "claims": [{ "claim_id": "claim_arr_amer", "text": "AMER has $18.25M in ARR." }],
+  "citations": [{ "citation_id": "cit_sales_amer", "claim_ids": ["claim_arr_amer"], "source_system": "warehouse", "domain_id": "sales-analytics", "retrieved_at": "2026-09-01T13:12:01Z", "as_of": "2026-09-01T12:45:00Z" }],
+  "conflicts": [],
+  "completeness": "complete",
+  "computed_scope": { "summary": "Authorized account and AMER regional scope" },
+  "source_statuses": [{ "source_system": "warehouse", "domain_id": "sales-analytics", "status": "success", "required": true, "as_of": "2026-09-01T12:45:00Z", "retrieved_at": "2026-09-01T13:12:01Z", "latency_ms": 45 }],
+  "routing": { "reuse": "reused", "domains": ["sales-analytics"], "plan_digest": "sha256:amer8", "safe_rationale": "The prior authorized result could be narrowed without changing sources." },
+  "created_at": "2026-09-01T13:12:01Z",
+  "as_of": "2026-09-01T12:45:00Z"
+}

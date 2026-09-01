@@ -1,128 +1,40 @@
-# MCP-A JSON Schemas
+# MCP-A 2.0 JSON Schemas
 
-Machine-readable JSON Schema definitions for the **MCP-A (MCP Answers Profile)** protocol,
-v1.0-beta. These schemas are the machine-readable counterpart to [`../SPEC.md`](../SPEC.md)
-and define the request/response contract for each of the seven primitives.
+The top-level files are the normative draft 2020-12 contracts for MCP-A
+`2.0.0-beta`. Their logical IDs use:
 
-## Draft version
-
-All schemas use **JSON Schema draft 2020-12**
-(`"$schema": "https://json-schema.org/draft/2020-12/schema"`).
-
-## `$id` convention
-
-Every schema has a stable, dereferenceable `$id` of the form:
-
-```
-https://mcp-a.dev/schemas/<filename>.json
+```text
+https://mcp-a.dev/schemas/2.0/<filename>
 ```
 
-Cross-file references use absolute `$id`-based `$ref`s into the shared definitions file, e.g.:
-
-```json
-{ "$ref": "https://mcp-a.dev/schemas/common.defs.json#/$defs/Citation" }
-```
-
-The `$id` is a logical identifier, not a guarantee of a live HTTP endpoint; resolve refs
-from this directory using a schema registry (see "How to validate" below).
+The URI is an identifier, not an instruction to fetch over the network. Build
+an offline registry or publish a bundled schema resource with all references.
 
 ## Files
 
-### Shared
+| File group | Purpose |
+|---|---|
+| `profile.client-capability.json` | Client-supported versions and optional features. |
+| `profile.capability.json` | Server-selected version, bundle, and features. |
+| `common.defs.json` | Shared query, provenance, input, operation, and effect definitions. |
+| `error.json` | Abstract tool execution error. |
+| `<tool>.request.json` | `tools/call.params.arguments` contract. |
+| `<tool>.response.json` | Successful `structuredContent` contract. |
 
-| File | Purpose |
-|------|---------|
-| `common.defs.json` | Reusable `$defs`: `Citation`, `ClarificationField`, `ActionEffect`, `Domain`, `AccessScope`, `RoutingDecision`, `ResponseSchemaTarget`, `Error`. Referenced by the primitive schemas via `$ref`. |
-| `error.json` | The standalone abstract error object. `code` is an `enum` of exactly the eleven named codes from SPEC §Error Model. |
+`follow_up.response.json` references `query.response.json` because a refinement
+creates an ordinary immutable answer. The ontology, query-plan schema, and
+output schema are separate objects by design.
 
-### Primitives (request + response per primitive)
+## Strictness and extensions
 
-| Primitive | Request | Response |
-|-----------|---------|----------|
-| 1. discover  | `discover.request.json`  | `discover.response.json` (includes the required `server` capability block) |
-| 2. schema    | `schema.request.json`    | `schema.response.json` (domain ontology; per-field `allowed_aggregations`; hierarchical drilling + `target: action` operation introspection) |
-| 3. query     | `query.request.json`     | `query.response.json` (covers prose **and** structured-response mode) |
-| 7. action    | `action.request.json`    | `action.response.json` (state-changing action; `action_id` + `status`; clarification rounds) |
-| 4. follow_up | `follow_up.request.json` | `follow_up.response.json` (query shape + polling `status`) |
-| 5. context   | `context.request.json`   | `context.response.json` |
-| 6. explain   | `explain.request.json`   | `explain.response.json` |
+Normative objects use `additionalProperties: false`. Extensions belong under
+the `extensions` property and use reverse-DNS keys. This avoids the former
+contradiction between closed schemas and instructions to ignore arbitrary
+unknown top-level fields.
 
-`context.request.json` is a `oneOf` of two shapes — a **Read** request and a **Write**
-request — discriminated by the presence of `action` (Write has it; Read forbids it).
+## Validation
 
-### Examples
-
-| File | Purpose |
-|------|---------|
-| `examples/query.response.structured.example.json` | A real structured-mode `query` response payload (from SPEC §3). Validates against `query.response.json`. |
-
-## Notable contract details
-
-- **discover.response** — `server` block is **required** with `mcp_a_version`,
-  `conformance_level` (enum `Core` / `Full` / `Extended`), and `supported_primitives[]`.
-- **query.response** — `answer_id` and `citations` are required; `is_draft` is OPTIONAL
-  (absent ⇒ `false`, i.e. a complete answer) and appears `true` only on a draft/partial answer.
-  `structured` + `structured_schema_ref` appear only in structured-response mode.
-- **query.request** — `response_schema` uses the tagged `ResponseSchemaTarget` discriminator
-  (`kind` ∈ `schema_ref` | `domain` | `inline`); `kind` constrains the type of `value`.
-- **error** — `code` enum is exactly: `UNAUTHENTICATED`, `FORBIDDEN`, `INVALID_REQUEST`,
-  `DOMAIN_NOT_FOUND`, `ANSWER_NOT_FOUND`, `SCHEMA_NONCONFORMANT`, `AGGREGATION_NOT_ALLOWED`,
-  `TIMEOUT`, `SOURCE_UNAVAILABLE`, `ACTION_NOT_FOUND`, `ACTION_FAILED`.
-- **action** — `action.request` is a `oneOf` (New action vs. Continuation), discriminated by the
-  presence of `action_id`; `action.response` requires `action_id` + `status`, with `clarification`
-  (when `clarification_required`), `result`/`effects` (when `completed`), and `error` (when `failed`).
-- **schema** — `target`/`action_id`/`path`/`depth` (request) and `truncated`/`expandable`/`max_depth`/
-  `path`/`target`/`actions`/`action_input_schema` (response) are OPTIONAL/additive; `domain_id` is
-  required only when `target` is `domain`/absent (via `if/then`), and `entities` only when `target`
-  is `domain`/`query`.
-- Optional (`?`-marked) spec fields are **not** in `required`; MUST-fields are `required`.
-- `additionalProperties: false` is set on closed object shapes. Open maps
-  (`access_scope`, `preferences`, `memory`, `source_latencies`, `confidence_per_source`,
-  and inline `structured` payloads) intentionally allow additional properties, consistent
-  with the spec's extension model ("clients SHOULD ignore unknown fields").
-
-## How to validate
-
-### Python (`jsonschema`)
-
-```bash
-pip install jsonschema referencing
-```
-
-```python
-import json, glob
-from referencing import Registry, Resource
-from jsonschema import Draft202012Validator
-
-# Build a registry from all schema files for cross-file $ref resolution
-resources = []
-for f in glob.glob("*.json"):
-    s = json.load(open(f))
-    resources.append((s["$id"], Resource.from_contents(s)))
-registry = Registry().with_resources(resources)
-
-# Well-formedness
-for _id, res in resources:
-    Draft202012Validator.check_schema(res.contents)
-
-# Validate an instance
-schema = json.load(open("query.response.json"))
-v = Draft202012Validator(schema, registry=registry)
-instance = json.load(open("examples/query.response.structured.example.json"))
-errors = list(v.iter_errors(instance))
-assert not errors, errors
-```
-
-### Node (`ajv-cli`)
-
-```bash
-npx -y ajv-cli@5 validate \
-  -s query.response.json \
-  -r common.defs.json -r error.json \
-  -d examples/query.response.structured.example.json \
-  --spec=draft2020 --strict=false --validate-formats=false
-```
-
-> `--strict=false` disables ajv's opinionated strict-mode warnings (union types,
-> unknown `format`). The schemas are valid draft 2020-12; `format` is treated as an
-> annotation per spec default. `--validate-formats=false` skips format assertion.
+Run `make check` from the repository root. The validation registry loads every
+top-level schema by `$id`, checks schema well-formedness, validates the current
+example manifest, and runs negative invariant tests. See
+[`../VALIDATION.md`](../VALIDATION.md).

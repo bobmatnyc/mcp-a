@@ -4,20 +4,22 @@ Version: 1.1.0-beta
 Date: 2026-07-01
 ---
 
+> Archived 1.1 design. It is not current 2.0 implementation guidance.
+
 # Instructing LLMs: Intent Classification & Query Building
 
 > **Status: non-normative guide.** This document is explanatory implementation
-> guidance complementing [`../SPEC.md`](../SPEC.md). It is not part of the
+> guidance complementing [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md). It is not part of the
 > behavior contract; where it differs from the SPEC or
-> [`../schemas/`](../schemas/), those win. The prompt templates below are
+> [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/), those win. The prompt templates below are
 > starting points to adapt, not normative requirements — but the JSON shapes
 > their outputs must conform to (`RoutingDecision`, the query response, etc.)
-> **are** governed by [`../schemas/`](../schemas/).
+> **are** governed by [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/).
 
 ## The division of labor
 
 MCP-A splits work across two models, and the prompts you write depend on which
-side you are on. From [`../SPEC.md`](../SPEC.md#design-principles) (Efficiency
+side you are on. From [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#design-principles) (Efficiency
 pillar and Design Principle 1):
 
 > It uses a less expensive inference model to classify, structure, and compile
@@ -47,7 +49,7 @@ input→output. All outputs are aligned to real schema field names.
 question is asking* and *which domain(s) own the answer*. The output is a routing
 decision the server acts on and later surfaces through `explain`. Its shape must
 match `RoutingDecision` in
-[`../schemas/common.defs.json`](../schemas/common.defs.json): required
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/common.defs.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/common.defs.json): required
 `rationale`; optional `algorithm`, `alternative_routings[{domains, score,
 reason?}]`, `reused_prior_routing`.
 
@@ -80,7 +82,7 @@ Rules:
 ```
 
 **Worked example.** Input catalog =
-[`../examples/14-discover-graphql.response.json`](../examples/14-discover-graphql.response.json)
+[`../../examples/v1.1/14-discover-graphql.response.json`](../../examples/v1.1/14-discover-graphql.response.json)
 `domains`; QUESTION = *"Total revenue and order count by region for paid and
 shipped orders this quarter"*. Expected output:
 
@@ -100,9 +102,9 @@ shipped orders this quarter"*. Expected output:
 ```
 
 This is exactly the `routing_decision` that appears in
-[`../examples/16-query-graphql-structured.response.json`](../examples/16-query-graphql-structured.response.json)
+[`../../examples/v1.1/16-query-graphql-structured.response.json`](../../examples/v1.1/16-query-graphql-structured.response.json)
 and that `explain` echoes in
-[`../examples/18-explain-graphql.response.json`](../examples/18-explain-graphql.response.json).
+[`../../examples/v1.1/18-explain-graphql.response.json`](../../examples/v1.1/18-explain-graphql.response.json).
 
 ---
 
@@ -150,7 +152,7 @@ Rules:
 ```
 
 **Worked example.** Input ONTOLOGY =
-[`../examples/15-schema-graphql.response.json`](../examples/15-schema-graphql.response.json);
+[`../../examples/v1.1/15-schema-graphql.response.json`](../../examples/v1.1/15-schema-graphql.response.json);
 QUESTION = *"Total revenue and order count by region for paid and shipped orders
 this quarter"*. Expected output:
 
@@ -184,8 +186,8 @@ must refuse the impossible aggregation:
 ```
 
 The server then returns the `AGGREGATION_NOT_ALLOWED` error
-([`../SPEC.md`](../SPEC.md#error-model)) rather than a fabricated number, mirroring
-[`../examples/07-error-aggregation.response.json`](../examples/07-error-aggregation.response.json).
+([`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#error-model)) rather than a fabricated number, mirroring
+[`../../examples/v1.1/07-error-aggregation.response.json`](../../examples/v1.1/07-error-aggregation.response.json).
 
 ---
 
@@ -195,9 +197,9 @@ The server then returns the `AGGREGATION_NOT_ALLOWED` error
 call* and how to shape the request — it does not classify intent server-side or
 build queries. The main decisions: `query` vs `schema` vs `action`, and whether
 to set `response_schema` (prose vs typed output). Request shapes are governed by
-[`../schemas/query.request.json`](../schemas/query.request.json),
-[`../schemas/schema.request.json`](../schemas/schema.request.json), and
-[`../schemas/action.request.json`](../schemas/action.request.json).
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/query.request.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/query.request.json),
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.request.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/schema.request.json), and
+[`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/action.request.json`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/schemas/action.request.json).
 
 **Prompt.**
 
@@ -235,13 +237,13 @@ arguments:
 ```
 
 This is precisely
-[`../examples/16-query-graphql-structured.request.json`](../examples/16-query-graphql-structured.request.json).
+[`../../examples/v1.1/16-query-graphql-structured.request.json`](../../examples/v1.1/16-query-graphql-structured.request.json).
 Had the agent wanted to *create* the discount code instead, it would have chosen
 `action` with the request from
-[`../examples/17-action-graphql.request.json`](../examples/17-action-graphql.request.json).
+[`../../examples/v1.1/17-action-graphql.request.json`](../../examples/v1.1/17-action-graphql.request.json).
 
 ## See also
 
 - [`surfacing-apis.md`](./surfacing-apis.md) — where templates A and B run in the server flow (steps 3.1–3.2).
 - [`graphql-query-builder.md`](./graphql-query-builder.md) — consumes template B's query plan.
-- [`../SPEC.md`](../SPEC.md#design-principles) — the division-of-labor principles (normative).
+- [`https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md`](https://github.com/bobmatnyc/mcp-a-protocol/blob/22a729bf07a66c8fb7bef11b2adb665d10edd992/SPEC.md#design-principles) — the division-of-labor principles (normative).
