@@ -2,10 +2,15 @@
 MAEP: 0002
 Title: Session Management — Core Hook + Full-Tier Capability
 Author: Robert Matsuoka <bob@matsuoka.com>
-Status: Draft
+Status: Superseded
 Created: 2026-06-18
 Spec-Version-Target: 1.0-beta
 ---
+
+> Superseded by [MAEP-0006](./0006-mcp-binding-and-protocol-hardening.md) on
+> 2026-09-01. MAEP-0006 replaces this optional `session_id` hook with session
+> state bound to negotiated MCP authorization context — an incompatible design
+> for the 2.0 line.
 
 ## Summary
 

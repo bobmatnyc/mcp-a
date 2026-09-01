@@ -8,6 +8,10 @@ not production adoption.
 - Cross-language reference implementations, runtime harness, interoperability
   event, benchmarks, and adversarial review remain release-gate work.
 
+### Changed
+
+- MAEP-0002 and MAEP-0003 marked Superseded by MAEP-0006 (#15).
+
 ### Fixed
 
 - Excluded `.claude/` from the document link check; test-only change.
