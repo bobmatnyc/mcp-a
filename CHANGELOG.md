@@ -8,6 +8,10 @@ not production adoption.
 - Cross-language reference implementations, runtime harness, interoperability
   event, benchmarks, and adversarial review remain release-gate work.
 
+### Fixed
+
+- Excluded `.claude/` from the document link check; test-only change.
+
 ## [2.0.0-beta] - 2026-09-01
 
 ### Changed
